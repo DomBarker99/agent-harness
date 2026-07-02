@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ink Reference</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d; --text: #c9d1d9;
+    --muted: #8b949e; --accent: #58a6ff; --green: #3fb950; --code-bg: #1f2630;
+    --tag-comp: #1f6feb; --tag-hook: #8957e5; --tag-api: #bb8009; --tag-pkg: #238636;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+  }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; }
+  /* Sidebar */
+  aside {
+    width: 240px; min-width: 240px; height: 100vh; position: sticky; top: 0;
+    overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border);
+    padding: 16px 0;
+  }
+  aside h1 { font-size: 18px; margin: 0 16px 4px; }
+  aside .sub { color: var(--muted); font-size: 12px; margin: 0 16px 12px; }
+  .search-wrap { padding: 0 16px 12px; }
+  #search {
+    width: 100%; padding: 8px 10px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
+  }
+  #search:focus { outline: none; border-color: var(--accent); }
+  .nav-group { color: var(--muted); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .06em; margin: 14px 16px 4px; }
+  nav a {
+    display: block; padding: 4px 16px; color: var(--text); text-decoration: none;
+    font-size: 14px; border-left: 2px solid transparent;
+  }
+  nav a:hover { background: #1c2430; border-left-color: var(--accent); }
+  nav a.hidden { display: none; }
+  /* Main */
+  main { flex: 1; padding: 28px 36px 80px; max-width: 1000px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 22px; margin-bottom: 22px;
+  }
+  .card.hidden { display: none; }
+  .card h2 { margin: 0 0 2px; font-size: 22px; }
+  .card h2 code { color: var(--accent); font-size: 22px; }
+  .tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 20px; color: #fff;
+    vertical-align: middle; margin-left: 8px; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .tag.component { background: var(--tag-comp); }
+  .tag.hook { background: var(--tag-hook); }
+  .tag.api { background: var(--tag-api); }
+  .tag.package { background: var(--tag-pkg); }
+  .sig {
+    display: block; background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px; margin: 10px 0; font-size: 13px;
+    color: #e6edf3; overflow-x: auto; white-space: pre;
+  }
+  .desc { color: var(--text); margin: 8px 0 14px; }
+  .desc.muted { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .04em; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 7px 10px; border-bottom: 1px solid #21262d; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.name code { color: var(--green); }
+  td.type code { color: #d2a8ff; font-size: 12.5px; }
+  td.def code { color: var(--muted); }
+  .prop-row.hidden { display: none; }
+  .no-results { color: var(--muted); padding: 40px; text-align: center; display: none; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  a.src { color: var(--accent); font-size: 12px; text-decoration: none; }
+  .count { color: var(--muted); font-size: 12px; font-weight: normal; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Ink Reference</h1>
+  <p class="sub mono">ink 7 · generated from installed types</p>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Filter… (e.g. border, color, focus)" autofocus />
+  </div>
+  <nav id="nav"></nav>
+</aside>
+<main>
+  <div id="cards"></div>
+  <div class="no-results" id="noResults">No matches. Try another term.</div>
+</main>
+
+<script>
+// ── Data: pulled verbatim from node_modules/ink + ink-text-input .d.ts files ──
+const COLOR = "string  (chalk color name or hex)";
+const NUMSTR = "number | string";
+
+const DATA = [
+  // ── COMPONENTS ──────────────────────────────────────────────
+  { name: "<Box>", kind: "component", import: 'import { Box } from "ink"',
+    sig: "<Box flexDirection=\"column\" padding={1} borderStyle=\"round\"> … </Box>",
+    desc: "The layout primitive — a flexbox container (like a CSS <div> with display:flex). Holds other Boxes and Text. Cannot directly contain raw strings; wrap text in <Text>.",
+    props: [
+      ["flexDirection", "'row' | 'column' | 'row-reverse' | 'column-reverse'", "row", "Main axis: lay children out across (row) or down (column)."],
+      ["justifyContent", "'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'", "flex-start", "Alignment along the main axis."],
+      ["alignItems", "'flex-start' | 'center' | 'flex-end' | 'stretch' | 'baseline'", "stretch", "Alignment along the cross axis."],
+      ["alignSelf", "'flex-start' | 'center' | 'flex-end' | 'auto' | 'stretch' | 'baseline'", "auto", "Override alignItems for this one element."],
+      ["alignContent", "'flex-start' | 'flex-end' | 'center' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'", "–", "Cross-axis alignment when wrapping onto multiple lines."],
+      ["flexGrow", "number", "0", "How much this item grows to fill spare space."],
+      ["flexShrink", "number", "1", "How much this item shrinks when space is tight."],
+      ["flexBasis", NUMSTR, "–", "Initial size before grow/shrink is applied."],
+      ["flexWrap", "'nowrap' | 'wrap' | 'wrap-reverse'", "nowrap", "Allow children to flow onto multiple lines."],
+      ["gap", "number", "0", "Spacing between children (shorthand for rowGap + columnGap)."],
+      ["rowGap", "number", "0", "Vertical gap between rows."],
+      ["columnGap", "number", "0", "Horizontal gap between columns."],
+      ["width", NUMSTR, "auto", "Width in cells, or a '%' of the parent."],
+      ["height", NUMSTR, "auto", "Height in rows, or a '%' of the parent."],
+      ["minWidth / minHeight", NUMSTR, "–", "Lower bounds on size."],
+      ["maxWidth / maxHeight", NUMSTR, "–", "Upper bounds on size."],
+      ["aspectRatio", "number", "–", "width/height ratio; pair with one size constraint."],
+      ["padding", "number", "0", "Inner spacing, all sides."],
+      ["paddingX / paddingY", "number", "0", "Inner spacing, horizontal / vertical."],
+      ["paddingTop / paddingBottom / paddingLeft / paddingRight", "number", "0", "Inner spacing, one side."],
+      ["margin", "number", "0", "Outer spacing, all sides."],
+      ["marginX / marginY", "number", "0", "Outer spacing, horizontal / vertical."],
+      ["marginTop / marginBottom / marginLeft / marginRight", "number", "0", "Outer spacing, one side."],
+      ["borderStyle", "'single' | 'double' | 'round' | 'bold' | 'singleDouble' | 'doubleSingle' | 'classic' | 'arrow' | BoxStyle", "–", "Draw a border. Omit for no border."],
+      ["borderColor", COLOR, "–", "Border color (shorthand for all four sides)."],
+      ["borderTop / borderBottom / borderLeft / borderRight", "boolean", "true", "Toggle visibility of one border edge."],
+      ["borderDimColor", "boolean", "false", "Dim the border color. Per-side variants exist too."],
+      ["borderTopColor / …RightColor / …BottomColor / …LeftColor", COLOR, "–", "Per-edge border color."],
+      ["borderBackgroundColor", COLOR, "–", "Border background color (per-edge variants exist)."],
+      ["backgroundColor", COLOR, "–", "Fill color behind the box's content."],
+      ["display", "'flex' | 'none'", "flex", "Set to 'none' to hide the element entirely."],
+      ["overflow / overflowX / overflowY", "'visible' | 'hidden'", "visible", "Clip content that exceeds the box."],
+      ["position", "'relative' | 'absolute' | 'static'", "relative", "Positioning scheme. 'static' ignores top/right/bottom/left."],
+      ["top / right / bottom / left", NUMSTR, "–", "Offsets for positioned elements."],
+      ["aria-label / aria-hidden / aria-role", "string / boolean / role", "–", "Screen-reader metadata."],
+    ] },
+
+  { name: "<Text>", kind: "component", import: 'import { Text } from "ink"',
+    sig: "<Text color=\"cyan\" bold>hello</Text>",
+    desc: "The only component that renders actual characters. All text must live inside a <Text>. Style props can nest (a <Text> inside a <Text>).",
+    props: [
+      ["children", "ReactNode", "–", "The text (or nested <Text>) to display."],
+      ["color", COLOR, "–", "Foreground color. Chalk names ('red', 'cyan') or hex ('#ff8800')."],
+      ["backgroundColor", COLOR, "–", "Background color."],
+      ["bold", "boolean", "false", "Bold weight."],
+      ["italic", "boolean", "false", "Italic (terminal support varies)."],
+      ["underline", "boolean", "false", "Underlined."],
+      ["strikethrough", "boolean", "false", "Crossed out."],
+      ["dimColor", "boolean", "false", "Make the color less bright."],
+      ["inverse", "boolean", "false", "Swap foreground and background colors."],
+      ["wrap", "'wrap' | 'truncate' | 'truncate-start' | 'truncate-middle' | 'truncate-end' | 'hard'", "wrap", "How to handle text wider than its container."],
+      ["aria-label / aria-hidden", "string / boolean", "–", "Screen-reader metadata."],
+    ] },
+
+  { name: "<Newline>", kind: "component", import: 'import { Newline } from "ink"',
+    sig: "<Text>line one<Newline />line two</Text>",
+    desc: "Inserts newline characters. Must be used inside a <Text>.",
+    props: [ ["count", "number", "1", "Number of newlines to insert."] ] },
+
+  { name: "<Spacer>", kind: "component", import: 'import { Spacer } from "ink"',
+    sig: "<Box><Text>left</Text><Spacer /><Text>right</Text></Box>",
+    desc: "A flexible gap that expands to fill all available space along the parent's main axis. The easy way to push two things to opposite ends.",
+    props: [] },
+
+  { name: "<Static>", kind: "component", import: 'import { Static } from "ink"',
+    sig: "<Static items={logs}>{(line, i) => <Text key={i}>{line}</Text>}</Static>",
+    desc: "Renders output permanently above the live UI and never redraws it — ideal for ever-growing logs or completed tasks (so they don't get re-rendered every frame). Give each item a key.",
+    props: [
+      ["items", "T[]", "–", "Array of items to render once."],
+      ["children", "(item: T, index: number) => ReactNode", "–", "Render function called per item."],
+      ["style", "Box styles", "–", "Styles for the container (same props as <Box>)."],
+    ] },
+
+  { name: "<Transform>", kind: "component", import: 'import { Transform } from "ink"',
+    sig: "<Transform transform={s => s.toUpperCase()}><Text>hi</Text></Transform>",
+    desc: "Transforms the final string output of its children (after styling → ANSI). Use for gradients, clickable links, or text effects that need a string, not React nodes.",
+    props: [
+      ["transform", "(children: string, index: number) => string", "–", "Receives rendered output, returns the transformed string."],
+      ["children", "ReactNode", "–", "Content to transform."],
+      ["accessibilityLabel", "string", "–", "Screen-reader text; if set, children are ignored for SR."],
+    ] },
+
+  // ── API ─────────────────────────────────────────────────────
+  { name: "render()", kind: "api", import: 'import { render } from "ink"',
+    sig: "const { unmount, waitUntilExit, rerender, clear } = render(<App />, options?)",
+    desc: "Mounts a component and starts drawing. Returns an instance with lifecycle controls. The entry point of every Ink program.",
+    props: [
+      ["returns: unmount()", "() => void", "–", "Tear down the app."],
+      ["returns: waitUntilExit()", "() => Promise", "–", "Resolves when the app unmounts (value passed to exit())."],
+      ["returns: rerender(node)", "function", "–", "Replace/update the root node."],
+      ["returns: clear()", "() => void", "–", "Clear the rendered output."],
+      ["opt: stdout / stdin / stderr", "stream", "process.*", "Override the I/O streams."],
+      ["opt: exitOnCtrlC", "boolean", "true", "Let Ink handle Ctrl+C to exit."],
+      ["opt: patchConsole", "boolean", "true", "Keep console.* output from clobbering the UI."],
+      ["opt: debug", "boolean", "false", "Render each frame separately instead of replacing."],
+      ["opt: alternateScreen", "boolean", "false", "Use the terminal's alternate buffer (like vim/htop)."],
+      ["opt: maxFps", "number", "30", "Cap on render frequency."],
+      ["opt: incrementalRendering", "boolean", "false", "Only redraw changed lines (less flicker)."],
+      ["opt: onRender", "(metrics) => void", "–", "Callback after each committed frame."],
+    ] },
+
+  // ── HOOKS ───────────────────────────────────────────────────
+  { name: "useInput()", kind: "hook", import: 'import { useInput } from "ink"',
+    sig: "useInput((input, key) => { if (key.return) submit(); }, { isActive })",
+    desc: "Calls your handler on every keypress. `input` is the typed character(s); `key` is a flags object (see below). A whole pasted string arrives in one call.",
+    props: [
+      ["input", "string", "–", "The character(s) typed. Empty for pure modifier/arrow keys."],
+      ["key.upArrow / downArrow / leftArrow / rightArrow", "boolean", "–", "Arrow keys."],
+      ["key.return", "boolean", "–", "Enter."],
+      ["key.escape", "boolean", "–", "Esc."],
+      ["key.tab", "boolean", "–", "Tab."],
+      ["key.backspace / delete", "boolean", "–", "Backspace / Delete."],
+      ["key.ctrl / shift / meta", "boolean", "–", "Modifier keys held."],
+      ["key.pageUp / pageDown / home / end", "boolean", "–", "Navigation keys."],
+      ["options.isActive", "boolean", "true", "Disable this handler (e.g. when another input is focused)."],
+    ] },
+
+  { name: "useApp()", kind: "hook", import: 'import { useApp } from "ink"',
+    sig: "const { exit } = useApp();  // exit(error?)",
+    desc: "App lifecycle controls. `exit()` is the clean way to end an Ink program (optionally with an error).",
+    props: [ ["exit", "(error?: Error) => void", "–", "Unmount the app and resolve waitUntilExit()."] ] },
+
+  { name: "useFocus()", kind: "hook", import: 'import { useFocus } from "ink"',
+    sig: "const { isFocused } = useFocus({ autoFocus, id, isActive });",
+    desc: "Makes a component focusable. Using it opts the component into Tab-navigation; `isFocused` tells you if it's currently active.",
+    props: [
+      ["returns: isFocused", "boolean", "–", "Whether this component currently has focus."],
+      ["returns: focus(id)", "(id: string) => void", "–", "Focus another component by id."],
+      ["autoFocus", "boolean", "false", "Grab focus on mount if nothing else is focused."],
+      ["id", "string", "–", "Id so it can be focused programmatically."],
+      ["isActive", "boolean", "true", "Toggle focusability while keeping list position."],
+    ] },
+
+  { name: "useFocusManager()", kind: "hook", import: 'import { useFocusManager } from "ink"',
+    sig: "const { focusNext, focusPrevious, focus, activeId } = useFocusManager();",
+    desc: "Imperative focus controls for the whole app — move focus around without waiting for Tab.",
+    props: [
+      ["focusNext() / focusPrevious()", "() => void", "–", "Cycle focus forward / backward."],
+      ["focus(id)", "(id) => void", "–", "Focus a specific component by id."],
+      ["enableFocus() / disableFocus()", "() => void", "–", "Turn focus management on / off."],
+      ["activeId", "string | undefined", "–", "Id of the currently focused component."],
+    ] },
+
+  { name: "usePaste()", kind: "hook", import: 'import { usePaste } from "ink"',
+    sig: "usePaste(text => setValue(v => v + text));",
+    desc: "Fires when the user pastes. Bracketed-paste mode means the full pasted string (incl. newlines) arrives as one call, instead of being misread as many keypresses. Pairs with useInput.",
+    props: [
+      ["handler", "(text: string) => void", "–", "Called with the full pasted string."],
+      ["options.isActive", "boolean", "true", "Enable/disable the paste handler."],
+    ] },
+
+  { name: "useAnimation()", kind: "hook", import: 'import { useAnimation } from "ink"',
+    sig: "const { frame, time, delta, reset } = useAnimation({ interval: 80 });",
+    desc: "Drives animations off a shared timer. Use `frame` for spinner-style indexed sequences, `time`/`delta` for math/physics-based motion.",
+    props: [
+      ["returns: frame", "number", "–", "Counter incrementing by 1 each interval."],
+      ["returns: time", "number", "–", "Total elapsed ms since start/reset."],
+      ["returns: delta", "number", "–", "ms since the previous tick."],
+      ["returns: reset()", "() => void", "–", "Reset counters and restart timing."],
+      ["interval", "number", "100", "ms between ticks."],
+      ["isActive", "boolean", "true", "Pause when false; resets to 0 when re-enabled."],
+    ] },
+
+  { name: "useWindowSize()", kind: "hook", import: 'import { useWindowSize } from "ink"',
+    sig: "const { columns, rows } = useWindowSize();",
+    desc: "Current terminal dimensions; re-renders the component when the terminal is resized.",
+    props: [
+      ["columns", "number", "–", "Horizontal character cells."],
+      ["rows", "number", "–", "Vertical rows."],
+    ] },
+
+  { name: "useStdout()", kind: "hook", import: 'import { useStdout } from "ink"',
+    sig: "const { stdout, write } = useStdout();",
+    desc: "Access the stdout stream Ink renders to (e.g. to write directly).",
+    props: [] },
+
+  { name: "useStdin()", kind: "hook", import: 'import { useStdin } from "ink"',
+    sig: "const { stdin, isRawModeSupported, setRawMode } = useStdin();",
+    desc: "Access the stdin stream and raw-mode utilities for low-level input handling.",
+    props: [] },
+
+  { name: "useStderr()", kind: "hook", import: 'import { useStderr } from "ink"',
+    sig: "const { stderr, write } = useStderr();",
+    desc: "Access the stderr stream.",
+    props: [] },
+
+  { name: "useBoxMetrics()", kind: "hook", import: 'import { useBoxMetrics } from "ink"',
+    sig: "const ref = useRef(null); const { width, height, hasMeasured } = useBoxMetrics(ref);",
+    desc: "Measured layout of a <Box ref={ref}> — width/height/left/top — updated on resize or content change. Returns zeros until the first layout pass (check hasMeasured).",
+    props: [
+      ["width / height", "number", "0", "Measured size of the element."],
+      ["left / top", "number", "0", "Position relative to the parent."],
+      ["hasMeasured", "boolean", "false", "True once the element has been measured."],
+    ] },
+
+  { name: "useCursor()", kind: "hook", import: 'import { useCursor } from "ink"',
+    sig: "const { setCursorPosition } = useCursor();",
+    desc: "Control the terminal cursor position (mainly for IME / composing-character support). Pass undefined to hide it.",
+    props: [ ["setCursorPosition(pos?)", "(pos | undefined) => void", "–", "Show the cursor at coords, or hide it."] ] },
+
+  { name: "useIsScreenReaderEnabled()", kind: "hook", import: 'import { useIsScreenReaderEnabled } from "ink"',
+    sig: "const sr = useIsScreenReaderEnabled();",
+    desc: "Whether a screen reader is active, so you can render alternative output.",
+    props: [] },
+
+  // ── COMMUNITY PACKAGES ──────────────────────────────────────
+  { name: "<TextInput>", kind: "package", import: 'import TextInput from "ink-text-input"',
+    sig: "<TextInput value={q} onChange={setQ} onSubmit={handle} placeholder=\"…\" />",
+    desc: "Separate package (npm i ink-text-input). A CONTROLLED editable text field: you store the value in your own useState; it reports changes via onChange and Enter via onSubmit.",
+    props: [
+      ["value", "string", "–", "Current text. YOU own this in state (controlled component)."],
+      ["onChange", "(value: string) => void", "–", "Called on every keystroke with the new text. Required."],
+      ["onSubmit", "(value: string) => void", "–", "Called when Enter is pressed."],
+      ["placeholder", "string", "–", "Shown when value is empty."],
+      ["focus", "boolean", "true", "Whether this input receives keystrokes (route input between fields)."],
+      ["mask", "string", "–", "Replace each char for display, e.g. '*' for passwords."],
+      ["showCursor", "boolean", "true", "Show cursor and allow arrow-key navigation."],
+      ["highlightPastedText", "boolean", "false", "Highlight text that was pasted."],
+    ] },
+];
+
+const KIND_LABEL = { component: "Components", api: "Top-level API", hook: "Hooks", package: "Community packages" };
+const KIND_ORDER = ["component", "api", "hook", "package"];
+
+function slug(name) { return name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase(); }
+
+// Build nav (grouped) + cards
+const nav = document.getElementById("nav");
+const cards = document.getElementById("cards");
+
+for (const kind of KIND_ORDER) {
+  const items = DATA.filter(d => d.kind === kind);
+  if (!items.length) continue;
+  const grp = document.createElement("div");
+  grp.className = "nav-group"; grp.textContent = KIND_LABEL[kind];
+  nav.appendChild(grp);
+  for (const d of items) {
+    const a = document.createElement("a");
+    a.href = "#" + slug(d.name); a.textContent = d.name;
+    a.dataset.key = (d.name + " " + d.desc).toLowerCase();
+    nav.appendChild(a);
+  }
+}
+
+for (const d of DATA) {
+  const card = document.createElement("section");
+  card.className = "card"; card.id = slug(d.name);
+  const haystack = (d.name + " " + d.desc + " " + d.props.map(p => p[0] + " " + p[3]).join(" ")).toLowerCase();
+  card.dataset.search = haystack;
+
+  let propsHtml = "";
+  if (d.props.length) {
+    propsHtml = `<table><thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>` +
+      d.props.map(p => `<tr class="prop-row" data-p="${(p[0]+' '+p[3]).toLowerCase()}">
+        <td class="name"><code>${p[0]}</code></td>
+        <td class="type"><code>${escapeHtml(p[1])}</code></td>
+        <td class="def"><code>${p[2]}</code></td>
+        <td>${escapeHtml(p[3])}</td></tr>`).join("") +
+      `</tbody></table>`;
+  } else {
+    propsHtml = `<p class="hint">No props.</p>`;
+  }
+
+  card.innerHTML = `
+    <h2><code>${escapeHtml(d.name)}</code><span class="tag ${d.kind}">${d.kind}</span></h2>
+    <code class="sig">${escapeHtml(d.import)}</code>
+    <code class="sig">${escapeHtml(d.sig)}</code>
+    <p class="desc">${escapeHtml(d.desc)}</p>
+    ${propsHtml}`;
+  cards.appendChild(card);
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c])); }
+
+// ── Live search ──
+const search = document.getElementById("search");
+const noResults = document.getElementById("noResults");
+const navLinks = [...nav.querySelectorAll("a")];
+const cardEls = [...cards.querySelectorAll(".card")];
+
+search.addEventListener("input", () => {
+  const q = search.value.trim().toLowerCase();
+  let visible = 0;
+  for (const card of cardEls) {
+    const rows = [...card.querySelectorAll(".prop-row")];
+    let cardMatch = !q || card.dataset.search.includes(q);
+    if (q && rows.length) {
+      let anyRow = false;
+      for (const r of rows) {
+        const m = r.dataset.p.includes(q);
+        r.classList.toggle("hidden", q && !cardMatch && !m);
+        if (m) anyRow = true;
+      }
+      cardMatch = cardMatch || anyRow;
+      if (cardMatch) rows.forEach(r => { if (card.dataset.search.includes(q)) r.classList.remove("hidden"); });
+    } else {
+      rows.forEach(r => r.classList.remove("hidden"));
+    }
+    card.classList.toggle("hidden", !cardMatch);
+    if (cardMatch) visible++;
+  }
+  for (const a of navLinks) a.classList.toggle("hidden", q && !a.dataset.key.includes(q) &&
+    !cardEls.find(c => c.id === a.getAttribute("href").slice(1) && !c.classList.contains("hidden")));
+  noResults.style.display = visible ? "none" : "block";
+});
+</script>
+</body>
+</html>

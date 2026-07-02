@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>chat.completions.create — response shape (annotated)</title>
+<script>
+  // Set theme before paint to avoid flash. (file:// may block storage — guard it.)
+  try { var t = localStorage.getItem('crt-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+<style>
+  :root {
+    --bg:#efede7; --surface:#fbfbf8;
+    --ink:#26241f; --key:#2a2823; --type:#524d44; --muted:#6c675c; --faint:#837c6b;
+    --guide:rgba(38,36,31,.13); --border:rgba(38,36,31,.16); --row-hover:rgba(38,36,31,.035);
+    --warm:#a4501f; --green:#436a41;
+    --badge-req-bg:rgba(176,89,47,.12); --badge-req-fg:#a3501f;
+    --chip-bg:rgba(38,36,31,.07); --chip-fg:#5c584e;
+    --variant-bg:rgba(78,122,81,.055);
+    --desc-bg:rgba(176,89,47,.05); --desc-fg:#5f5a50;
+    --mark-bg:#f3dd8e; --mark-fg:#3a3320;
+    --toolbar-bg:rgba(251,251,248,.93);
+    --on-warm:#fff;
+  }
+  html[data-theme="dark"] {
+    --bg:#1a1916; --surface:#201f1b;
+    --ink:#e7e3d8; --key:#e9e5da; --type:#a39e8f; --muted:#8f8a7e; --faint:#6a665c;
+    --guide:rgba(231,227,216,.10); --border:rgba(231,227,216,.13); --row-hover:rgba(231,227,216,.045);
+    --warm:#d98a5c; --green:#86b386;
+    --badge-req-bg:rgba(217,138,92,.16); --badge-req-fg:#e09a6e;
+    --chip-bg:rgba(231,227,216,.08); --chip-fg:#c3bdad;
+    --variant-bg:rgba(134,179,134,.08);
+    --desc-bg:rgba(217,138,92,.08); --desc-fg:#b8b2a4;
+    --mark-bg:#6d5d2a; --mark-fg:#fff3cf;
+    --toolbar-bg:rgba(32,31,27,.93);
+    --on-warm:#1a1916;
+  }
+
+  * { box-sizing:border-box; }
+  html, body { margin:0; }
+  body {
+    background:var(--bg); color:var(--ink);
+    font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    font-size:13px; line-height:1.55;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+
+  .wrap { max-width:1120px; margin:0 auto; padding:0 22px 80px; }
+
+  /* ---- Sticky header ---- */
+  header {
+    position:sticky; top:0; z-index:10;
+    background:var(--toolbar-bg); backdrop-filter:saturate(1.4) blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .hbar { max-width:1120px; margin:0 auto; padding:12px 22px; }
+  .titlerow { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .title { font-weight:700; font-size:15px; letter-spacing:-.01em; color:var(--ink); }
+  .title .dot { color:var(--warm); }
+  .subtitle { color:var(--muted); font-size:12.5px; }
+  .grow { flex:1 1 auto; }
+  .pill {
+    font-size:11px; color:var(--muted);
+    border:1px solid var(--border); border-radius:999px; padding:2px 9px;
+  }
+  .iconbtn {
+    font-family:inherit; font-size:13px; line-height:1;
+    background:transparent; color:var(--muted);
+    border:1px solid var(--border); border-radius:7px;
+    padding:6px 9px; cursor:pointer;
+  }
+  .iconbtn:hover { color:var(--ink); border-color:var(--faint); }
+
+  .toolbar { display:flex; align-items:center; gap:9px; margin-top:11px; flex-wrap:wrap; }
+  .search {
+    flex:1 1 280px; display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:0 10px; min-height:34px;
+  }
+  .search:focus-within { border-color:var(--warm); }
+  .search .mag { color:var(--faint); font-size:13px; }
+  .search input {
+    flex:1; border:0; outline:0; background:transparent; color:var(--ink);
+    font-family:inherit; font-size:13px; padding:7px 0;
+  }
+  .search input::placeholder { color:var(--faint); }
+  .search .count { color:var(--muted); font-size:11px; white-space:nowrap; }
+  .search kbd {
+    font-family:inherit; font-size:10.5px; color:var(--muted);
+    border:1px solid var(--border); border-bottom-width:2px; border-radius:4px;
+    padding:1px 5px; background:var(--surface);
+  }
+  .btn {
+    font-family:inherit; font-size:12px; color:var(--ink);
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:7px 12px; cursor:pointer; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn:hover { border-color:var(--faint); }
+  .btn:active { transform:translateY(.5px); }
+  .btn.active { background:var(--warm); color:var(--on-warm); border-color:var(--warm); }
+  .btn.active .gi { border-color:var(--on-warm); color:var(--on-warm); }
+
+  .legend { display:flex; gap:16px; flex-wrap:wrap; align-items:center; color:var(--muted); font-size:11px; margin-top:10px; }
+  .legend .swatch { display:inline-flex; align-items:center; gap:6px; }
+  .legend .b { font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:5px; }
+
+  /* glyph: circled italic i (info) */
+  .gi {
+    flex:none; display:inline-flex; align-items:center; justify-content:center;
+    width:15px; height:15px; border-radius:50%;
+    border:1px solid var(--border); color:var(--muted);
+    font-family:Georgia,"Times New Roman",serif; font-style:italic; font-weight:700;
+    font-size:10px; line-height:1; user-select:none;
+  }
+
+  /* ---- Tree ---- */
+  .tree { margin-top:22px; }
+
+  .node { }
+  .row {
+    display:flex; align-items:baseline; gap:9px;
+    padding:2.5px 8px 2.5px 4px; border-radius:6px;
+  }
+  .row.clk { cursor:pointer; }
+  .row.clk:hover { background:var(--row-hover); }
+
+  .tw {
+    flex:none; width:1.1em; text-align:center; color:var(--faint);
+    font-size:10px; user-select:none; transform:translateY(-1px);
+  }
+  .tw.leaf { color:transparent; }
+
+  .label { flex:1 1 auto; min-width:0; }
+  .key { color:var(--key); font-weight:600; }
+  .q { color:var(--faint); font-weight:600; }
+  .colon { color:var(--faint); }
+  .type { color:var(--type); white-space:pre-wrap; overflow-wrap:anywhere; }
+
+  .meta { flex:none; display:flex; align-items:baseline; gap:9px; }
+  .info {
+    flex:none; display:inline-flex; align-items:center; justify-content:center;
+    width:15px; height:15px; border-radius:50%;
+    border:1px solid var(--border); color:var(--muted);
+    font-family:Georgia,"Times New Roman",serif; font-style:italic; font-weight:700;
+    font-size:10px; line-height:1; cursor:pointer; user-select:none;
+    transform:translateY(1px);
+  }
+  .info:hover { color:var(--warm); border-color:var(--warm); }
+  .info.on { color:var(--on-warm); background:var(--warm); border-color:var(--warm); }
+  .doc {
+    color:var(--faint); text-decoration:none; font-size:12px;
+    border-radius:5px; padding:0 2px; transform:translateY(-1px);
+  }
+  .doc:hover { color:var(--warm); }
+  .badge {
+    font-size:9.5px; letter-spacing:.06em; text-transform:uppercase;
+    padding:1.5px 7px; border-radius:5px; white-space:nowrap;
+  }
+  .badge.req { color:var(--badge-req-fg); background:var(--badge-req-bg); font-weight:700; }
+  .badge.opt { color:var(--muted); background:transparent; border:1px solid var(--border); }
+
+  /* description panel */
+  .desc, .vdesc {
+    display:none; margin:2px 0 7px 1.85em; max-width:660px;
+    padding:7px 12px; border-left:2px solid var(--warm); border-radius:0 6px 6px 0;
+    background:var(--desc-bg); color:var(--desc-fg); font-size:12px; line-height:1.55;
+  }
+  .node.desc-open > .desc { display:block; }
+  .variant.desc-open > .vdesc { display:block; }
+
+  /* nesting + guides */
+  .body { display:none; margin-left:9px; padding-left:13px; border-left:1px solid var(--guide); }
+  .node.expanded > .body { display:block; }
+
+  .zone { margin:3px 0 5px; }
+  .zonelabel {
+    font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    padding:5px 0 3px 6px;
+  }
+
+  .variant { margin:2px 0; }
+  .vrow {
+    display:flex; align-items:baseline; gap:9px;
+    background:var(--variant-bg); border-radius:7px;
+    padding:3px 9px 3px 5px;
+  }
+  .vrow.clk { cursor:pointer; }
+  .vrow.clk:hover { filter:brightness(.985); }
+  html[data-theme="dark"] .vrow.clk:hover { filter:brightness(1.15); }
+  .vlabel {
+    flex:none; font-size:10.5px; color:var(--chip-fg); background:var(--chip-bg);
+    padding:1px 8px; border-radius:999px;
+  }
+  .vdisc { flex:1 1 auto; min-width:0; color:var(--green); white-space:pre-wrap; overflow-wrap:anywhere; }
+  .vmeta { flex:none; display:flex; align-items:baseline; gap:9px; }
+  .vbody { display:none; margin-left:9px; padding-left:13px; border-left:1px solid var(--guide); }
+  .variant.expanded > .vbody { display:block; }
+
+  mark { background:var(--mark-bg); color:var(--mark-fg); border-radius:2px; padding:0 1px; }
+
+  .hidden { display:none !important; }
+
+  .noresults { display:none; color:var(--muted); padding:34px 8px; font-size:13px; }
+  .noresults.on { display:block; }
+  .noresults code { color:var(--ink); }
+
+  footer { margin-top:42px; color:var(--faint); font-size:11px; border-top:1px solid var(--border); padding-top:14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <div class="titlerow">
+      <span class="title">ChatCompletion</span>
+      <span class="subtitle">response shape — what chat.completions.create resolves to</span>
+      <span class="grow"></span>
+      <span class="pill">openai@6.42.0</span>
+      <button class="iconbtn" id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">☾</button>
+    </div>
+    <div class="toolbar">
+      <label class="search">
+        <span class="mag" aria-hidden="true">⌕</span>
+        <input id="search" type="text" placeholder="Filter by key, type, or description…  (e.g. finish_reason)" autocomplete="off" spellcheck="false" aria-label="Filter fields">
+        <span class="count" id="count"></span>
+        <kbd>/</kbd>
+      </label>
+      <button class="btn" id="descBtn" aria-pressed="false" title="Show every field's description"><span class="gi" aria-hidden="true">i</span>Descriptions</button>
+      <button class="btn" id="expandAll">Expand all</button>
+      <button class="btn" id="collapseAll">Collapse all</button>
+    </div>
+    <div class="legend">
+      <span class="swatch"><span class="b badge req">required</span> no <code>?</code></span>
+      <span class="swatch"><span class="b badge opt">optional</span> has <code>?</code></span>
+      <span class="swatch"><span class="gi" aria-hidden="true">i</span>&nbsp;<span>what it does</span></span>
+      <span class="swatch" style="color:var(--green)">type: "…"&nbsp;<span style="color:var(--muted)">discriminant</span></span>
+      <span class="swatch"><span style="color:var(--faint)">↗</span>&nbsp;<span>API docs</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tree" id="tree"></div>
+  <div class="noresults" id="noresults">No field’s key, type, or description matches <code id="nrq"></code>.</div>
+  <footer>
+    Generated from <code>openai@6.42.0</code> · <code>ChatCompletion</code> — the resolved return value of <code>create</code> when <code>stream</code> is false/omitted. With <code>stream: true</code> the method returns <code>Stream&lt;ChatCompletionChunk&gt;</code> instead, which is a different shape. Descriptions summarize each field's purpose — see the <code>↗</code> links for the authoritative API reference.
+  </footer>
+</div>
+
+<script>
+/* ===========================================================================
+   DATA — source of truth (openai@6.42.0). Hand-edit this object on SDK bumps.
+   Schema:
+     Node = { key, type, required, kind:"leaf"|"object"|"array"|"union",
+              desc?,                 // one-line "what it does / role it plays"
+              docAnchor?, children?, item?, common?,
+              variants?: { label, discriminant, desc?, fields:Node[] }[] }
+   =========================================================================== */
+
+// moderation.input and moderation.output share one shape — built once here.
+function moderationSide(key, what) {
+  return {
+    key: key, type: "ModerationResults | Error", required: true, kind: "union",
+    desc: "Moderation verdict for the " + what + ": full results on success, or an error object if moderation could not run.",
+    common: [],
+    variants: [
+      { label: "results", discriminant: 'type: "moderation_results"',
+        desc: "Successful classification of the " + what + ".",
+        fields: [
+          { key: "model", type: "string", required: true, kind: "leaf",
+            desc: "The moderation model used to generate the results." },
+          { key: "results", type: "Array<Result>", required: true, kind: "array",
+            desc: "The individual moderation results.",
+            item: {
+              key: "(element)", type: "Result", required: true, kind: "object",
+              desc: "One moderation result: an overall flag plus per-category detail.",
+              children: [
+                { key: "flagged", type: "boolean", required: true, kind: "leaf",
+                  desc: "True if any category flagged the content." },
+                { key: "categories", type: "{ [category: string]: boolean }", required: true, kind: "leaf",
+                  desc: "Per-category flags — true where the content falls under that category." },
+                { key: "category_scores", type: "{ [category: string]: number }", required: true, kind: "leaf",
+                  desc: "Per-category confidence scores." },
+                { key: "category_applied_input_types", type: '{ [category: string]: Array<"text" | "image"> }', required: true, kind: "leaf",
+                  desc: "Which input modalities (text, image) each category's score reflects." },
+                { key: "model", type: "string", required: true, kind: "leaf",
+                  desc: "The moderation model that produced this individual result." }
+              ]
+            }
+          }
+        ]},
+      { label: "error", discriminant: 'type: "error"',
+        desc: "Moderation failed for the " + what + ".",
+        fields: [
+          { key: "code", type: "string", required: true, kind: "leaf",
+            desc: "Machine-readable error code." },
+          { key: "message", type: "string", required: true, kind: "leaf",
+            desc: "Human-readable description of the failure." }
+        ]}
+    ]
+  };
+}
+
+const RESPONSE_TREE = {
+  key: "ChatCompletion", type: "what create() resolves to when stream is false/omitted",
+  required: true, kind: "object",
+  desc: "The complete response of a non-streaming call. The reply itself lives at choices[0].message; everything else is metadata about how it was produced. With stream: true you instead get a Stream<ChatCompletionChunk> — a different shape, not covered here.",
+  children: [
+    { key: "choices", type: "Array<ChatCompletion.Choice>", required: true, kind: "array", docAnchor: "chat-object-choices",
+      desc: "The generated completions — one per n requested (default 1), so your reply is choices[0].",
+      item: {
+        key: "(element)", type: "ChatCompletion.Choice", required: true, kind: "object",
+        desc: "One candidate completion: the generated message, why generation stopped, and optional token logprobs.",
+        children: [
+          { key: "message", type: "ChatCompletionMessage", required: true, kind: "object",
+            desc: "The assistant turn the model produced. Append it to your messages array to continue the conversation — especially when it carries tool_calls.",
+            children: [
+              { key: "role", type: '"assistant"', required: true, kind: "leaf",
+                desc: "Always assistant — a response is always a model turn." },
+              { key: "content", type: "string | null", required: true, kind: "leaf",
+                desc: "The reply text. null when the turn is a tool call (or refusal) instead of prose." },
+              { key: "tool_calls", type: "Array<ChatCompletionMessageToolCall>", required: false, kind: "array",
+                desc: "Tool invocations the model wants run. Append this assistant message, execute each call, then send one role:\"tool\" message per call.",
+                item: {
+                  key: "(element)", type: "ChatCompletionMessageFunctionToolCall | ChatCompletionMessageCustomToolCall", required: true, kind: "union",
+                  desc: "One requested tool call, discriminated by type.",
+                  common: [
+                    { key: "id", type: "string", required: true, kind: "leaf",
+                      desc: "Unique id of this call. Echo it as tool_call_id on the matching tool message." }
+                  ],
+                  variants: [
+                    { label: "function", discriminant: 'type: "function"',
+                      desc: "A function tool call: the function's name plus its arguments as a JSON string.",
+                      fields: [
+                        { key: "function", type: "{ name: string; arguments: string }", required: true, kind: "object",
+                          desc: "What to invoke, and with what arguments.",
+                          children: [
+                            { key: "name", type: "string", required: true, kind: "leaf",
+                              desc: "Which of the tools you declared in the request to invoke." },
+                            { key: "arguments", type: "string", required: true, kind: "leaf",
+                              desc: "The arguments as a JSON string. The model can emit invalid JSON or invent keys — parse and validate before executing." }
+                          ]}
+                      ]},
+                    { label: "custom", discriminant: 'type: "custom"',
+                      desc: "A custom tool call carrying freeform input text.",
+                      fields: [
+                        { key: "custom", type: "{ name: string; input: string }", required: true, kind: "leaf",
+                          desc: "The custom tool's name and the raw input the model produced for it." }
+                      ]}
+                  ]
+                }
+              },
+              { key: "refusal", type: "string | null", required: true, kind: "leaf",
+                desc: "The human-readable refusal message when the model declined to answer; otherwise null." },
+              { key: "annotations", type: "Array<ChatCompletionMessage.Annotation>", required: false, kind: "array",
+                desc: "Citations attached to the reply — currently URL citations produced when the web search tool ran.",
+                item: {
+                  key: "(element)", type: '{ type: "url_citation"; url_citation: {…} }', required: true, kind: "object",
+                  desc: "One citation, anchored to a character range of content.",
+                  children: [
+                    { key: "type", type: '"url_citation"', required: true, kind: "leaf",
+                      desc: "The annotation kind — always url_citation today." },
+                    { key: "url_citation", type: "{ url: string; title: string; start_index: number; end_index: number }", required: true, kind: "leaf",
+                      desc: "The cited web resource, plus the [start_index, end_index) span of content it supports." }
+                  ]}
+              },
+              { key: "audio", type: "ChatCompletionAudio | null", required: false, kind: "object",
+                desc: "Present only when you requested audio output (modalities: [\"audio\"]) — the spoken version of the reply.",
+                children: [
+                  { key: "id", type: "string", required: true, kind: "leaf",
+                    desc: "Server-side id of this audio. Reference it in later assistant turns instead of resending the bytes." },
+                  { key: "data", type: "string", required: true, kind: "leaf",
+                    desc: "The audio itself, base64-encoded in the format you asked for (wav, mp3, …)." },
+                  { key: "transcript", type: "string", required: true, kind: "leaf",
+                    desc: "What the audio says, as text." },
+                  { key: "expires_at", type: "number", required: true, kind: "leaf",
+                    desc: "Unix time when the server drops this audio and its id stops working for multi-turn reuse." }
+                ]},
+              { key: "function_call", type: "{ name: string; arguments: string } | null  // deprecated → tool_calls", required: false, kind: "leaf",
+                desc: "Legacy single function call. Superseded by tool_calls." }
+            ]
+          },
+          { key: "finish_reason", type: '"stop" | "length" | "tool_calls" | "content_filter" | "function_call"', required: true, kind: "union",
+            desc: "Why generation ended. A harness should branch on this — especially tool_calls (run tools, loop) vs stop (done).",
+            common: [],
+            variants: [
+              { label: "stop", discriminant: '"stop"',
+                desc: "Natural finish — the model completed its answer, or hit one of your stop sequences.", fields: [] },
+              { label: "length", discriminant: '"length"',
+                desc: "Ran out of budget: max_completion_tokens (or the context window) was hit. The message is likely truncated mid-thought.", fields: [] },
+              { label: "tool_calls", discriminant: '"tool_calls"',
+                desc: "The model ended its turn to call tools — run message.tool_calls and reply with tool messages.", fields: [] },
+              { label: "content_filter", discriminant: '"content_filter"',
+                desc: "Content was omitted because a content filter flagged it.", fields: [] },
+              { label: "function_call (deprecated)", discriminant: '"function_call"',
+                desc: "Legacy counterpart of tool_calls, for the deprecated function_call mechanism.", fields: [] }
+            ]
+          },
+          { key: "index", type: "number", required: true, kind: "leaf",
+            desc: "Position of this choice in the choices array (0-based). Matters only when n > 1." },
+          { key: "logprobs", type: "Choice.Logprobs | null", required: true, kind: "object",
+            desc: "Token-level log-probabilities. null unless the request set logprobs: true.",
+            children: [
+              { key: "content", type: "Array<ChatCompletionTokenLogprob> | null", required: true, kind: "array",
+                desc: "One entry per generated content token.",
+                item: {
+                  key: "(element)", type: "ChatCompletionTokenLogprob", required: true, kind: "object",
+                  desc: "A token the model emitted, its log-probability, and the runners-up at that position.",
+                  children: [
+                    { key: "token", type: "string", required: true, kind: "leaf",
+                      desc: "The token's text." },
+                    { key: "logprob", type: "number", required: true, kind: "leaf",
+                      desc: "Natural-log probability of this token. -9999.0 flags tokens outside the top 20." },
+                    { key: "bytes", type: "Array<number> | null", required: true, kind: "leaf",
+                      desc: "The token's raw UTF-8 bytes — join consecutive tokens' bytes when a character spans tokens. null if unavailable." },
+                    { key: "top_logprobs", type: "Array<{ token: string; logprob: number; bytes: number[] | null }>", required: true, kind: "leaf",
+                      desc: "The most likely alternative tokens at this position — at most the top_logprobs you requested." }
+                  ]}
+              },
+              { key: "refusal", type: "Array<ChatCompletionTokenLogprob> | null", required: true, kind: "leaf",
+                desc: "The same per-token detail for refusal text, when the model refused." }
+            ]}
+        ]
+      }
+    },
+
+    { key: "id", type: "string", required: true, kind: "leaf", docAnchor: "chat-object-id",
+      desc: "Unique id of this completion (chatcmpl-…). Useful for logging and support requests." },
+    { key: "created", type: "number", required: true, kind: "leaf", docAnchor: "chat-object-created",
+      desc: "Unix timestamp (seconds) of when the completion was created." },
+    { key: "model", type: "string", required: true, kind: "leaf", docAnchor: "chat-object-model",
+      desc: "The model that actually served the request — often a dated snapshot of the alias you sent." },
+    { key: "object", type: '"chat.completion"', required: true, kind: "leaf", docAnchor: "chat-object-object",
+      desc: "Literal type tag, always \"chat.completion\". (Streaming chunks say \"chat.completion.chunk\".)" },
+
+    { key: "usage", type: "CompletionUsage", required: false, kind: "object", docAnchor: "chat-object-usage",
+      desc: "Token accounting: what you pay for and how much context the exchange consumed. Optional in the type, but in practice always present on non-streaming responses.",
+      children: [
+        { key: "prompt_tokens", type: "number", required: true, kind: "leaf",
+          desc: "Tokens the model read: your messages, tool definitions, and any other input." },
+        { key: "completion_tokens", type: "number", required: true, kind: "leaf",
+          desc: "Tokens the model generated — visible output plus any hidden reasoning tokens." },
+        { key: "total_tokens", type: "number", required: true, kind: "leaf",
+          desc: "prompt_tokens + completion_tokens." },
+        { key: "prompt_tokens_details", type: "{ cached_tokens?: number; audio_tokens?: number }", required: false, kind: "object",
+          desc: "Breakdown of the prompt side.",
+          children: [
+            { key: "cached_tokens", type: "number", required: false, kind: "leaf",
+              desc: "Prompt tokens served from the prompt cache — billed at a discount." },
+            { key: "audio_tokens", type: "number", required: false, kind: "leaf",
+              desc: "Audio input tokens present in the prompt." }
+          ]},
+        { key: "completion_tokens_details", type: "{ reasoning_tokens?; audio_tokens?; accepted_prediction_tokens?; rejected_prediction_tokens? }", required: false, kind: "object",
+          desc: "Breakdown of the completion side.",
+          children: [
+            { key: "reasoning_tokens", type: "number", required: false, kind: "leaf",
+              desc: "Hidden thinking tokens from reasoning models — billed as output but never shown in content." },
+            { key: "audio_tokens", type: "number", required: false, kind: "leaf",
+              desc: "Audio output tokens generated by the model." },
+            { key: "accepted_prediction_tokens", type: "number", required: false, kind: "leaf",
+              desc: "With Predicted Outputs: predicted tokens that matched the completion and were reused." },
+            { key: "rejected_prediction_tokens", type: "number", required: false, kind: "leaf",
+              desc: "With Predicted Outputs: predicted tokens that didn't appear — still billed as completion tokens." }
+          ]}
+      ]
+    },
+
+    { key: "service_tier", type: '"auto" | "default" | "flex" | "scale" | "priority" | null', required: false, kind: "leaf", docAnchor: "chat-object-service_tier",
+      desc: "The processing tier that actually served the request — may differ from the tier you asked for." },
+    { key: "system_fingerprint", type: "string  // deprecated", required: false, kind: "leaf", docAnchor: "chat-object-system_fingerprint",
+      desc: "Deprecated. Backend-configuration fingerprint; compare across same-seed calls to spot backend changes that affect determinism." },
+
+    { key: "moderation", type: "ChatCompletion.Moderation | null", required: false, kind: "object",
+      desc: "Only present when moderated completions were requested — safety classification of both the input you sent and the output generated.",
+      children: [
+        moderationSide("input", "request input"),
+        moderationSide("output", "generated output")
+      ]
+    }
+  ]
+};
+
+/* ===========================================================================
+   RENDER
+   =========================================================================== */
+const DOC_BASE = "https://platform.openai.com/docs/api-reference/chat/object#";
+const records = [];          // every rendered line (node or variant header)
+const zones = [];            // zone wrappers (common to all / variants)
+
+function el(tag, cls, txt) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = txt;
+  return e;
+}
+
+function nodeHasBody(n) {
+  if (n.kind === "object") return !!(n.children && n.children.length);
+  if (n.kind === "array")  return !!n.item;
+  if (n.kind === "union")  return !!((n.common && n.common.length) || (n.variants && n.variants.length));
+  return false;
+}
+
+function infoButton(rec) {
+  const b = el("span", "info", "i");
+  b.setAttribute("role", "button");
+  b.setAttribute("tabindex", "0");
+  b.setAttribute("aria-label", "What this does");
+  b.title = "What this does";
+  b.addEventListener("click", e => { e.stopPropagation(); toggleInfo(rec); });
+  b.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleInfo(rec); }
+  });
+  return b;
+}
+
+// Build one normal node -> { el, rec }
+function buildNode(node, path, parentRec) {
+  const wrap = el("div", "node");
+  const row  = el("div", "row");
+  wrap.appendChild(row);
+
+  const hasBody = nodeHasBody(node);
+  const tw = el("span", "tw" + (hasBody ? "" : " leaf"), "▸");
+  row.appendChild(tw);
+
+  const label = el("span", "label");
+  const keyEl = el("span", "key", node.key);
+  label.appendChild(keyEl);
+  if (!node.required) label.appendChild(el("span", "q", "?"));
+  label.appendChild(el("span", "colon", " : "));
+  const typeEl = el("span", "type", node.type);
+  label.appendChild(typeEl);
+  row.appendChild(label);
+
+  const rec = {
+    type: "node", el: wrap, row, tw, keyEl, typeEl,
+    keyText: node.key, typeText: node.type,
+    descText: node.desc || "", descEl: null, infoBtn: null,
+    hasBody, expanded: false, parent: parentRec, path
+  };
+
+  const meta = el("span", "meta");
+  if (node.desc) { rec.infoBtn = infoButton(rec); meta.appendChild(rec.infoBtn); }
+  if (node.docAnchor) {
+    const a = el("a", "doc", "↗");
+    a.href = DOC_BASE + node.docAnchor;
+    a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.title = "Open API docs ↗";
+    a.addEventListener("click", e => e.stopPropagation());
+    meta.appendChild(a);
+  }
+  meta.appendChild(el("span", "badge " + (node.required ? "req" : "opt"), node.required ? "required" : "optional"));
+  row.appendChild(meta);
+
+  records.push(rec);
+
+  if (node.desc) {
+    const d = el("div", "desc");
+    rec.descEl = el("span", "desctext", node.desc);
+    d.appendChild(rec.descEl);
+    wrap.appendChild(d);
+  }
+
+  if (hasBody) {
+    row.classList.add("clk");
+    row.addEventListener("click", () => toggle(rec));
+    const body = el("div", "body");
+    wrap.appendChild(body);
+    if (node.kind === "object") {
+      node.children.forEach(c => body.appendChild(buildNode(c, path + "/" + c.key, rec).el));
+    } else if (node.kind === "array") {
+      body.appendChild(buildNode(node.item, path + "/" + node.item.key, rec).el);
+    } else if (node.kind === "union") {
+      buildUnion(node, body, path, rec);
+    }
+  }
+  return { el: wrap, rec };
+}
+
+function buildUnion(node, body, path, unionRec) {
+  const common = node.common || [], variants = node.variants || [];
+  if (common.length) {
+    const z = el("div", "zone");
+    z.appendChild(el("div", "zonelabel", "common to all"));
+    common.forEach(c => z.appendChild(buildNode(c, path + "/" + c.key, unionRec).el));
+    body.appendChild(z); zones.push(z);
+  }
+  if (variants.length) {
+    const z = el("div", "zone");
+    z.appendChild(el("div", "zonelabel", "variants"));
+    variants.forEach(v => z.appendChild(buildVariant(v, path + "::" + v.label, unionRec)));
+    body.appendChild(z); zones.push(z);
+  }
+}
+
+function buildVariant(v, path, parentRec) {
+  const wrap = el("div", "variant");
+  const vrow = el("div", "vrow");
+  wrap.appendChild(vrow);
+
+  const hasBody = !!(v.fields && v.fields.length);
+  vrow.appendChild(el("span", "tw" + (hasBody ? "" : " leaf"), "▸"));
+  const labelEl = el("span", "vlabel", v.label);
+  const discEl  = el("span", "vdisc", v.discriminant);
+  vrow.appendChild(labelEl);
+  vrow.appendChild(discEl);
+
+  const rec = {
+    type: "variant", el: wrap, row: vrow, tw: vrow.firstChild,
+    labelEl, discEl, labelText: v.label, discText: v.discriminant,
+    descText: v.desc || "", descEl: null, infoBtn: null,
+    hasBody, expanded: false, parent: parentRec, path
+  };
+
+  const vmeta = el("span", "vmeta");
+  if (v.desc) { rec.infoBtn = infoButton(rec); vmeta.appendChild(rec.infoBtn); }
+  vrow.appendChild(vmeta);
+
+  records.push(rec);
+
+  if (v.desc) {
+    const d = el("div", "vdesc");
+    rec.descEl = el("span", "desctext", v.desc);
+    d.appendChild(rec.descEl);
+    wrap.appendChild(d);
+  }
+
+  if (hasBody) {
+    vrow.classList.add("clk");
+    vrow.addEventListener("click", () => toggle(rec));
+    const vbody = el("div", "vbody");
+    wrap.appendChild(vbody);
+    v.fields.forEach(f => vbody.appendChild(buildNode(f, path + "/" + f.key, rec).el));
+  }
+  return wrap;
+}
+
+function setExpanded(rec, val) {
+  rec.expanded = val;
+  rec.el.classList.toggle("expanded", val);
+  if (rec.hasBody) rec.tw.textContent = val ? "▾" : "▸";
+}
+function toggle(rec) { setExpanded(rec, !rec.expanded); }
+
+function setInfo(rec, on) {
+  rec.el.classList.toggle("desc-open", on);
+  if (rec.infoBtn) rec.infoBtn.classList.toggle("on", on);
+}
+function toggleInfo(rec) { setInfo(rec, !rec.el.classList.contains("desc-open")); }
+
+/* ---- highlight ---- */
+function plain(rec) {
+  if (rec.type === "variant") { rec.labelEl.textContent = rec.labelText; rec.discEl.textContent = rec.discText; }
+  else { rec.keyEl.textContent = rec.keyText; rec.typeEl.textContent = rec.typeText; }
+  if (rec.descEl) rec.descEl.textContent = rec.descText;
+}
+function highlight(elm, text, q) {
+  const low = text.toLowerCase(), frag = document.createDocumentFragment();
+  let last = 0, idx;
+  while ((idx = low.indexOf(q, last)) !== -1) {
+    if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
+    frag.appendChild(el("mark", null, text.slice(idx, idx + q.length)));
+    last = idx + q.length;
+  }
+  if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  elm.textContent = ""; elm.appendChild(frag);
+}
+
+/* ---- default state ---- */
+const ROOT = RESPONSE_TREE.key;
+const DEFAULT_EXPANDED = new Set([
+  ROOT,
+  ROOT + "/choices",
+  ROOT + "/choices/(element)",
+  ROOT + "/choices/(element)/message"
+]);
+function closeAllInfo() {
+  records.forEach(rec => setInfo(rec, false));
+  allDesc = false; descBtn.classList.remove("active"); descBtn.setAttribute("aria-pressed", "false");
+}
+function resetToDefault() {
+  records.forEach(rec => {
+    rec.el.classList.remove("hidden");
+    plain(rec);
+    setExpanded(rec, rec.hasBody && DEFAULT_EXPANDED.has(rec.path));
+    setInfo(rec, false);
+  });
+  zones.forEach(z => z.classList.remove("hidden"));
+  allDesc = false; descBtn.classList.remove("active"); descBtn.setAttribute("aria-pressed", "false");
+  showNoResults(false, "");
+}
+
+/* ---- search ---- */
+function applySearch(raw) {
+  const q = (raw || "").trim().toLowerCase();
+  if (!q) { resetToDefault(); setCount(""); return; }
+
+  allDesc = false; descBtn.classList.remove("active"); descBtn.setAttribute("aria-pressed", "false");
+
+  const matched = [];
+  records.forEach(rec => {
+    const head = (rec.type === "variant" ? rec.labelText + " " + rec.discText : rec.keyText + " " + rec.typeText).toLowerCase();
+    rec.matchHead = head.includes(q);
+    rec.matchDesc = !!rec.descText && rec.descText.toLowerCase().includes(q);
+    rec.match = rec.matchHead || rec.matchDesc;
+    if (rec.match) matched.push(rec);
+  });
+
+  if (!matched.length) {
+    records.forEach(rec => { rec.el.classList.add("hidden"); setInfo(rec, false); });
+    zones.forEach(z => z.classList.add("hidden"));
+    showNoResults(true, raw.trim());
+    setCount("0 matches");
+    return;
+  }
+  showNoResults(false, "");
+
+  const visible = new Set(), expand = new Set();
+  matched.forEach(rec => {
+    visible.add(rec);
+    let p = rec.parent;
+    while (p) { visible.add(p); expand.add(p); p = p.parent; }
+  });
+
+  records.forEach(rec => {
+    rec.el.classList.toggle("hidden", !visible.has(rec));
+    setExpanded(rec, expand.has(rec));
+    plain(rec);
+    setInfo(rec, false);
+    if (rec.match) {
+      if (rec.matchHead) {
+        if (rec.type === "variant") {
+          if (rec.labelText.toLowerCase().includes(q)) highlight(rec.labelEl, rec.labelText, q);
+          if (rec.discText.toLowerCase().includes(q))  highlight(rec.discEl, rec.discText, q);
+        } else {
+          if (rec.keyText.toLowerCase().includes(q))   highlight(rec.keyEl, rec.keyText, q);
+          if (rec.typeText.toLowerCase().includes(q))  highlight(rec.typeEl, rec.typeText, q);
+        }
+      }
+      if (rec.matchDesc) {
+        highlight(rec.descEl, rec.descText, q);
+        if (!rec.matchHead) setInfo(rec, true);   // reveal description when that's why it matched
+      }
+    }
+  });
+
+  zones.forEach(z => z.classList.toggle("hidden", !z.querySelector(".node:not(.hidden), .variant:not(.hidden)")));
+  setCount(matched.length + (matched.length === 1 ? " match" : " matches"));
+}
+
+/* ---- chrome wiring ---- */
+const searchInput = document.getElementById("search");
+const countEl = document.getElementById("count");
+const noresults = document.getElementById("noresults");
+const nrq = document.getElementById("nrq");
+const descBtn = document.getElementById("descBtn");
+let allDesc = false;
+function setCount(t) { countEl.textContent = t; }
+function showNoResults(on, q) { noresults.classList.toggle("on", on); if (on) nrq.textContent = '"' + q + '"'; }
+
+function expandAll() {
+  searchInput.value = ""; setCount(""); showNoResults(false, ""); closeAllInfo();
+  records.forEach(rec => { rec.el.classList.remove("hidden"); plain(rec); setExpanded(rec, rec.hasBody); });
+  zones.forEach(z => z.classList.remove("hidden"));
+}
+function collapseAll() {
+  searchInput.value = ""; setCount(""); showNoResults(false, ""); closeAllInfo();
+  records.forEach(rec => { rec.el.classList.remove("hidden"); plain(rec); setExpanded(rec, false); });
+  zones.forEach(z => z.classList.remove("hidden"));
+}
+
+descBtn.addEventListener("click", () => {
+  allDesc = !allDesc;
+  descBtn.classList.toggle("active", allDesc);
+  descBtn.setAttribute("aria-pressed", allDesc ? "true" : "false");
+  records.forEach(rec => { if (rec.descEl) setInfo(rec, allDesc); });
+});
+
+document.getElementById("expandAll").addEventListener("click", expandAll);
+document.getElementById("collapseAll").addEventListener("click", collapseAll);
+searchInput.addEventListener("input", e => applySearch(e.target.value));
+searchInput.addEventListener("keydown", e => { if (e.key === "Escape") { searchInput.value = ""; applySearch(""); searchInput.blur(); } });
+
+// "/" focuses the filter (unless already typing in it)
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); }
+});
+
+// theme toggle
+const themeBtn = document.getElementById("theme");
+function syncThemeBtn() {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+  themeBtn.title = dark ? "Switch to light" : "Switch to dark";
+}
+themeBtn.addEventListener("click", () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  const next = dark ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("crt-theme", next); } catch (e) {}
+  syncThemeBtn();
+});
+
+/* ---- init ---- */
+document.getElementById("tree").appendChild(buildNode(RESPONSE_TREE, RESPONSE_TREE.key, null).el);
+resetToDefault();
+syncThemeBtn();
+</script>
+</body>
+</html>

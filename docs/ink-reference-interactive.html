@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ink Reference</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d; --text: #c9d1d9;
+    --muted: #8b949e; --accent: #58a6ff; --green: #3fb950; --code-bg: #1f2630;
+    --tag-comp: #1f6feb; --tag-hook: #8957e5; --tag-api: #bb8009; --tag-pkg: #238636; --tag-ui: #1098ad;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+  }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; }
+  /* Sidebar */
+  aside {
+    width: 240px; min-width: 240px; height: 100vh; position: sticky; top: 0;
+    overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border);
+    padding: 16px 0;
+  }
+  aside h1 { font-size: 18px; margin: 0 16px 4px; }
+  aside .sub { color: var(--muted); font-size: 12px; margin: 0 16px 12px; }
+  .search-wrap { padding: 0 16px 12px; }
+  #search {
+    width: 100%; padding: 8px 10px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
+  }
+  #search:focus { outline: none; border-color: var(--accent); }
+  .nav-group { color: var(--muted); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .06em; margin: 14px 16px 4px; }
+  nav a {
+    display: block; padding: 4px 16px; color: var(--text); text-decoration: none;
+    font-size: 14px; border-left: 2px solid transparent;
+  }
+  nav a:hover { background: #1c2430; border-left-color: var(--accent); }
+  nav a.hidden { display: none; }
+  /* Main */
+  main { flex: 1; padding: 28px 36px 80px; max-width: 1000px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 22px; margin-bottom: 22px;
+  }
+  .card.hidden { display: none; }
+  .card h2 { margin: 0 0 2px; font-size: 22px; }
+  .card h2 code { color: var(--accent); font-size: 22px; }
+  .tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 20px; color: #fff;
+    vertical-align: middle; margin-left: 8px; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .tag.component { background: var(--tag-comp); }
+  .tag.hook { background: var(--tag-hook); }
+  .tag.api { background: var(--tag-api); }
+  .tag.type { background: var(--tag-pkg); }
+  .tag.package { background: var(--tag-pkg); }
+  .tag.ui { background: var(--tag-ui); }
+  .sig {
+    display: block; background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px; margin: 10px 0; font-size: 13px;
+    color: #e6edf3; overflow-x: auto; white-space: pre;
+  }
+  .desc { color: var(--text); margin: 8px 0 14px; }
+  .desc.muted { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .04em; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 7px 10px; border-bottom: 1px solid #21262d; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.name code { color: var(--green); }
+  td.type code { color: #d2a8ff; font-size: 12.5px; }
+  td.def code { color: var(--muted); }
+  .prop-row.hidden { display: none; }
+  .no-results { color: var(--muted); padding: 40px; text-align: center; display: none; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  a.src { color: var(--accent); font-size: 12px; text-decoration: none; }
+  .count { color: var(--muted); font-size: 12px; font-weight: normal; }
+  /* Clickable props with a live example */
+  .prop-row.has-example td.name { cursor: pointer; }
+  .prop-row.has-example td.name code::after {
+    content: "▸"; color: var(--accent); font-size: 11px; margin-left: 6px;
+    display: inline-block; transition: transform .12s ease; vertical-align: middle;
+  }
+  .prop-row.has-example.open td.name code::after { transform: rotate(90deg); }
+  .prop-row.has-example td.name:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  .example-row > td { padding: 0 10px 14px; border-bottom: 1px solid #21262d; }
+  .example-wrap { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+  .example-snippet, .term {
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+    margin: 0; font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    font-size: 12.5px; line-height: 1.5; white-space: pre; overflow-x: auto;
+  }
+  .example-snippet { background: var(--code-bg); color: #e6edf3; }
+  .term { background: #000; color: var(--text); }
+  .example-label { color: var(--muted); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .04em; display: block; margin: 0 0 6px; }
+  .example-col { display: flex; flex-direction: column; min-width: 0; flex: 0 1 auto; }
+  .example-col.grow { flex: 1 1 320px; }
+  .term .note { color: var(--muted); font-style: italic; }
+  /* Component-level live example (Ink UI section) */
+  .comp-example { margin: 2px 0 14px; }
+  .ex-toggle {
+    font: inherit; font-size: 12px; cursor: pointer; color: var(--accent);
+    background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+  }
+  .ex-toggle:hover { border-color: var(--accent); }
+  .ex-toggle.open { background: #1c2430; }
+  .comp-example-body { margin-top: 12px; }
+  .example-note { color: var(--muted); font-size: 11.5px; font-style: italic; display: block; margin-top: 6px; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Ink Reference</h1>
+  <p class="sub mono">ink 7 + @inkjs/ui 2 · generated from installed types</p>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Filter… (e.g. border, color, focus)" autofocus />
+  </div>
+  <nav id="nav"></nav>
+</aside>
+<main>
+  <div id="cards"></div>
+  <div class="no-results" id="noResults">No matches. Try another term.</div>
+</main>
+
+<!-- EXAMPLES:START (generated by src/gen-examples.tsx — do not edit by hand) -->
+<script>window.EXAMPLES = {
+  "Box.flexDirection": {
+    "code": "\u003cBox flexDirection=\"row\" gap={1}>\n  \u003cBox borderStyle=\"round\" paddingX={1}>\u003cText>A\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"round\" paddingX={1}>\u003cText>B\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"round\" paddingX={1}>\u003cText>C\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭───╮ ╭───╮ ╭───╮\n│ A │ │ B │ │ C │\n╰───╯ ╰───╯ ╰───╯"
+  },
+  "Box.justifyContent": {
+    "code": "\u003cBox width={22} borderStyle=\"round\" justifyContent=\"space-between\">\n  \u003cText>A\u003c/Text>\n  \u003cText>B\u003c/Text>\n  \u003cText>C\u003c/Text>\n\u003c/Box>",
+    "html": "╭────────────────────╮\n│A        B         C│\n╰────────────────────╯"
+  },
+  "Box.alignItems": {
+    "code": "\u003cBox height={5} borderStyle=\"round\" alignItems=\"center\" paddingX={1} gap={2}>\n  \u003cBox height={3} backgroundColor=\"cyan\" paddingX={1}>\u003cText>tall\u003c/Text>\u003c/Box>\n  \u003cText>centered\u003c/Text>\n\u003c/Box>",
+    "html": "╭──────────────────╮\n│ \u003cspan style=\"background-color:#11a8cd\"> tall \u003c/span>           │\n│ \u003cspan style=\"background-color:#11a8cd\">      \u003c/span>  centered │\n│ \u003cspan style=\"background-color:#11a8cd\">      \u003c/span>           │\n╰──────────────────╯"
+  },
+  "Box.alignSelf": {
+    "code": "\u003cBox height={5} borderStyle=\"round\" alignItems=\"flex-start\" paddingX={1} gap={1}>\n  \u003cBox backgroundColor=\"cyan\" paddingX={1}>\u003cText>top\u003c/Text>\u003c/Box>\n  \u003cBox alignSelf=\"flex-end\" backgroundColor=\"magenta\" paddingX={1}>\u003cText>bottom\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭────────────────╮\n│ \u003cspan style=\"background-color:#11a8cd\"> top \u003c/span>          │\n│                │\n│       \u003cspan style=\"background-color:#bc3fbc\"> bottom \u003c/span> │\n╰────────────────╯"
+  },
+  "Box.flexGrow": {
+    "code": "\u003cBox width={22} borderStyle=\"round\">\n  \u003cBox flexGrow={1} backgroundColor=\"cyan\">\u003cText>grows\u003c/Text>\u003c/Box>\n  \u003cBox backgroundColor=\"magenta\">\u003cText>fixed\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭────────────────────╮\n│\u003cspan style=\"background-color:#11a8cd\">grows          \u003c/span>\u003cspan style=\"background-color:#bc3fbc\">fixed\u003c/span>│\n╰────────────────────╯"
+  },
+  "Box.flexShrink": {
+    "code": "\u003cBox width={16} borderStyle=\"round\">\n  \u003cBox width={10} flexShrink={0} backgroundColor=\"cyan\">\u003cText>keep\u003c/Text>\u003c/Box>\n  \u003cBox width={10} backgroundColor=\"magenta\">\u003cText>shrinks\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭──────────────╮\n│\u003cspan style=\"background-color:#11a8cd\">keep      \u003c/span>\u003cspan style=\"background-color:#bc3fbc\">shri\u003c/span>│\n│\u003cspan style=\"background-color:#11a8cd\">          \u003c/span>\u003cspan style=\"background-color:#bc3fbc\">nks \u003c/span>│\n╰──────────────╯"
+  },
+  "Box.flexBasis": {
+    "code": "\u003cBox width={22} borderStyle=\"round\">\n  \u003cBox flexBasis={12} backgroundColor=\"cyan\">\u003cText>basis 12\u003c/Text>\u003c/Box>\n  \u003cBox flexGrow={1} backgroundColor=\"magenta\">\u003cText>rest\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭────────────────────╮\n│\u003cspan style=\"background-color:#11a8cd\">basis 12    \u003c/span>\u003cspan style=\"background-color:#bc3fbc\">rest    \u003c/span>│\n╰────────────────────╯"
+  },
+  "Box.flexWrap": {
+    "code": "\u003cBox width={14} borderStyle=\"round\" flexWrap=\"wrap\">\n  \u003cBox width={4} backgroundColor=\"cyan\">\u003cText>A\u003c/Text>\u003c/Box>\n  \u003cBox width={4} backgroundColor=\"magenta\">\u003cText>B\u003c/Text>\u003c/Box>\n  \u003cBox width={4} backgroundColor=\"green\">\u003cText>C\u003c/Text>\u003c/Box>\n  \u003cBox width={4} backgroundColor=\"yellow\">\u003cText>D\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭────────────╮\n│\u003cspan style=\"background-color:#11a8cd\">A   \u003c/span>\u003cspan style=\"background-color:#bc3fbc\">B   \u003c/span>\u003cspan style=\"background-color:#0dbc79\">C   \u003c/span>│\n│\u003cspan style=\"background-color:#e5e510\">D   \u003c/span>        │\n╰────────────╯"
+  },
+  "Box.gap": {
+    "code": "\u003cBox gap={2}>\n  \u003cBox borderStyle=\"round\" paddingX={1}>\u003cText>1\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"round\" paddingX={1}>\u003cText>2\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"round\" paddingX={1}>\u003cText>3\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭───╮  ╭───╮  ╭───╮\n│ 1 │  │ 2 │  │ 3 │\n╰───╯  ╰───╯  ╰───╯"
+  },
+  "Box.rowGap": {
+    "code": "\u003cBox flexDirection=\"column\" rowGap={1}>\n  \u003cBox backgroundColor=\"cyan\" paddingX={1}>\u003cText>row 1\u003c/Text>\u003c/Box>\n  \u003cBox backgroundColor=\"magenta\" paddingX={1}>\u003cText>row 2\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "\u003cspan style=\"background-color:#11a8cd\"> row 1 \u003c/span>\n\n\u003cspan style=\"background-color:#bc3fbc\"> row 2 \u003c/span>"
+  },
+  "Box.columnGap": {
+    "code": "\u003cBox columnGap={3}>\n  \u003cBox backgroundColor=\"cyan\" paddingX={1}>\u003cText>1\u003c/Text>\u003c/Box>\n  \u003cBox backgroundColor=\"magenta\" paddingX={1}>\u003cText>2\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "\u003cspan style=\"background-color:#11a8cd\"> 1 \u003c/span>   \u003cspan style=\"background-color:#bc3fbc\"> 2 \u003c/span>"
+  },
+  "Box.width": {
+    "code": "\u003cBox width={20} borderStyle=\"round\" paddingX={1}>\u003cText>width 20\u003c/Text>\u003c/Box>",
+    "html": "╭──────────────────╮\n│ width 20         │\n╰──────────────────╯"
+  },
+  "Box.height": {
+    "code": "\u003cBox height={4} borderStyle=\"round\" paddingX={1}>\u003cText>height 4\u003c/Text>\u003c/Box>",
+    "html": "╭──────────╮\n│ height 4 │\n│          │\n╰──────────╯"
+  },
+  "Box.minWidth": {
+    "code": "\u003cBox minWidth={18} borderStyle=\"round\" paddingX={1}>\u003cText>min 18\u003c/Text>\u003c/Box>",
+    "html": "╭────────────────╮\n│ min 18         │\n╰────────────────╯"
+  },
+  "Box.maxWidth": {
+    "code": "\u003cBox maxWidth={14} borderStyle=\"round\" paddingX={1}>\n  \u003cText>this text is capped to the max width\u003c/Text>\n\u003c/Box>",
+    "html": "╭────────────╮\n│ this text  │\n│ is capped  │\n│ to the max │\n│  width     │\n╰────────────╯"
+  },
+  "Box.aspectRatio": {
+    "code": "\u003cBox width={15} aspectRatio={3} borderStyle=\"round\" justifyContent=\"center\" alignItems=\"center\">\n  \u003cText>3 : 1\u003c/Text>\n\u003c/Box>",
+    "html": "╭─────────────╮\n│             │\n│    3 : 1    │\n│             │\n╰─────────────╯"
+  },
+  "Box.padding": {
+    "code": "\u003cBox flexDirection=\"row\" gap={2}>\n  \u003cBox borderStyle=\"round\">\u003cText>tight\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"round\" padding={1}>\u003cText>padded\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭─────╮  ╭────────╮\n│tight│  │        │\n│     │  │ padded │\n│     │  │        │\n╰─────╯  ╰────────╯"
+  },
+  "Box.paddingX": {
+    "code": "\u003cBox flexDirection=\"row\" gap={2}>\n  \u003cBox borderStyle=\"round\" paddingX={2}>\u003cText>paddingX\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"round\" paddingY={1}>\u003cText>paddingY\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭────────────╮  ╭────────╮\n│  paddingX  │  │        │\n│            │  │paddingY│\n│            │  │        │\n╰────────────╯  ╰────────╯"
+  },
+  "Box.paddingTop": {
+    "code": "\u003cBox borderStyle=\"round\" paddingTop={2} paddingLeft={4}>\u003cText>offset\u003c/Text>\u003c/Box>",
+    "html": "╭──────────╮\n│          │\n│          │\n│    offset│\n╰──────────╯"
+  },
+  "Box.margin": {
+    "code": "\u003cBox borderStyle=\"round\">\n  \u003cBox margin={1} backgroundColor=\"cyan\" paddingX={1}>\u003cText>margin 1\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭────────────╮\n│            │\n│ \u003cspan style=\"background-color:#11a8cd\"> margin 1 \u003c/span> │\n│            │\n╰────────────╯"
+  },
+  "Box.marginX": {
+    "code": "\u003cBox borderStyle=\"round\">\n  \u003cBox marginX={3} backgroundColor=\"cyan\" paddingX={1}>\u003cText>marginX 3\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭─────────────────╮\n│   \u003cspan style=\"background-color:#11a8cd\"> marginX 3 \u003c/span>   │\n╰─────────────────╯"
+  },
+  "Box.marginTop": {
+    "code": "\u003cBox flexDirection=\"column\" borderStyle=\"round\" paddingX={1}>\n  \u003cBox backgroundColor=\"cyan\" paddingX={1}>\u003cText>first\u003c/Text>\u003c/Box>\n  \u003cBox marginTop={1} backgroundColor=\"magenta\" paddingX={1}>\u003cText>second\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭──────────╮\n│ \u003cspan style=\"background-color:#11a8cd\"> first  \u003c/span> │\n│          │\n│ \u003cspan style=\"background-color:#bc3fbc\"> second \u003c/span> │\n╰──────────╯"
+  },
+  "Box.borderStyle": {
+    "code": "\u003cBox flexDirection=\"column\" gap={1}>\n  \u003cBox borderStyle=\"round\"  paddingX={1}>\u003cText>round\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"double\" paddingX={1}>\u003cText>double\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"bold\"   paddingX={1}>\u003cText>bold\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭────────╮\n│ round  │\n╰────────╯\n\n╔════════╗\n║ double ║\n╚════════╝\n\n┏━━━━━━━━┓\n┃ bold   ┃\n┗━━━━━━━━┛"
+  },
+  "Box.borderColor": {
+    "code": "\u003cBox borderStyle=\"round\" borderColor=\"green\" paddingX={1}>\u003cText>green border\u003c/Text>\u003c/Box>",
+    "html": "\u003cspan style=\"color:#0dbc79\">╭──────────────╮\u003c/span>\n\u003cspan style=\"color:#0dbc79\">│\u003c/span> green border \u003cspan style=\"color:#0dbc79\">│\u003c/span>\n\u003cspan style=\"color:#0dbc79\">╰──────────────╯\u003c/span>"
+  },
+  "Box.borderTop": {
+    "code": "\u003cBox borderStyle=\"round\" borderTop={false} borderRight={false} paddingX={1}>\n  \u003cText>left + bottom only\u003c/Text>\n\u003c/Box>",
+    "html": "│ left + bottom only\n╰────────────────────"
+  },
+  "Box.borderDimColor": {
+    "code": "\u003cBox flexDirection=\"row\" gap={2}>\n  \u003cBox borderStyle=\"round\" paddingX={1}>\u003cText>normal\u003c/Text>\u003c/Box>\n  \u003cBox borderStyle=\"round\" borderDimColor paddingX={1}>\u003cText>dim\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "╭────────╮  \u003cspan style=\"opacity:.6\">╭─────╮\u003c/span>\n│ normal │  \u003cspan style=\"opacity:.6\">│\u003c/span> dim \u003cspan style=\"opacity:.6\">│\u003c/span>\n╰────────╯  \u003cspan style=\"opacity:.6\">╰─────╯\u003c/span>"
+  },
+  "Box.borderTopColor": {
+    "code": "\u003cBox\n  borderStyle=\"round\"\n  borderTopColor=\"red\"\n  borderRightColor=\"green\"\n  borderBottomColor=\"blue\"\n  borderLeftColor=\"yellow\"\n  paddingX={1}\n>\n  \u003cText>per-edge color\u003c/Text>\n\u003c/Box>",
+    "html": "\u003cspan style=\"color:#cd3131\">╭────────────────╮\u003c/span>\n\u003cspan style=\"color:#e5e510\">│\u003c/span> per-edge color \u003cspan style=\"color:#0dbc79\">│\u003c/span>\n\u003cspan style=\"color:#2472c8\">╰────────────────╯\u003c/span>"
+  },
+  "Box.borderBackgroundColor": {
+    "code": "\u003cBox borderStyle=\"round\" borderColor=\"white\" borderBackgroundColor=\"blue\" paddingX={1}>\n  \u003cText>border bg\u003c/Text>\n\u003c/Box>",
+    "html": "\u003cspan style=\"color:#e5e5e5;background-color:#2472c8\">╭───────────╮\u003c/span>\n\u003cspan style=\"color:#e5e5e5;background-color:#2472c8\">│\u003c/span> border bg \u003cspan style=\"color:#e5e5e5;background-color:#2472c8\">│\u003c/span>\n\u003cspan style=\"color:#e5e5e5;background-color:#2472c8\">╰───────────╯\u003c/span>"
+  },
+  "Box.backgroundColor": {
+    "code": "\u003cBox backgroundColor=\"blue\" paddingX={2} paddingY={1}>\n  \u003cText color=\"white\" bold>backed\u003c/Text>\n\u003c/Box>",
+    "html": "\u003cspan style=\"background-color:#2472c8\">          \u003c/span>\n\u003cspan style=\"background-color:#2472c8\">  \u003c/span>\u003cspan style=\"color:#e5e5e5;background-color:#2472c8;font-weight:bold\">backed\u003c/span>\u003cspan style=\"background-color:#2472c8\">  \u003c/span>\n\u003cspan style=\"background-color:#2472c8\">          \u003c/span>"
+  },
+  "Box.display": {
+    "code": "\u003cBox gap={1}>\n  \u003cBox backgroundColor=\"cyan\" paddingX={1}>\u003cText>A\u003c/Text>\u003c/Box>\n  \u003cBox display=\"none\">\u003cText>B\u003c/Text>\u003c/Box>\n  \u003cBox backgroundColor=\"green\" paddingX={1}>\u003cText>C\u003c/Text>\u003c/Box>\n\u003c/Box>",
+    "html": "\u003cspan style=\"background-color:#11a8cd\"> A \u003c/span> \u003cspan style=\"background-color:#0dbc79\"> C \u003c/span>"
+  },
+  "Box.position": {
+    "code": "\u003cBox height={4} width={18} borderStyle=\"round\">\n  \u003cBox position=\"absolute\" top={1} left={5}>\n    \u003cText color=\"cyan\">absolute\u003c/Text>\n  \u003c/Box>\n\u003c/Box>",
+    "html": "╭────────────────╮\n│                │\n│     \u003cspan style=\"color:#11a8cd\">absolute\u003c/span>   │\n╰────────────────╯"
+  },
+  "Box.top": {
+    "code": "\u003cBox height={4} width={18} borderStyle=\"round\">\n  \u003cBox position=\"absolute\" bottom={0} right={1}>\n    \u003cText color=\"magenta\">bottom-right\u003c/Text>\n  \u003c/Box>\n\u003c/Box>",
+    "html": "╭────────────────╮\n│                │\n│   \u003cspan style=\"color:#bc3fbc\">bottom-right\u003c/span> │\n╰────────────────╯"
+  },
+  "Text.color": {
+    "code": "\u003cBox flexDirection=\"column\">\n  \u003cText color=\"cyan\">cyan\u003c/Text>\n  \u003cText color=\"#ff8800\">#ff8800 (hex)\u003c/Text>\n\u003c/Box>",
+    "html": "\u003cspan style=\"color:#11a8cd\">cyan\u003c/span>\n\u003cspan style=\"color:rgb(255,136,0)\">#ff8800 (hex)\u003c/span>"
+  },
+  "Text.backgroundColor": {
+    "code": "\u003cText backgroundColor=\"magenta\" color=\"white\"> highlighted \u003c/Text>",
+    "html": "\u003cspan style=\"color:#e5e5e5;background-color:#bc3fbc\"> highlighted \u003c/span>"
+  },
+  "Text.bold": {
+    "code": "\u003cBox flexDirection=\"column\">\n  \u003cText bold>bold\u003c/Text>\n  \u003cText>normal\u003c/Text>\n\u003c/Box>",
+    "html": "\u003cspan style=\"font-weight:bold\">bold\u003c/span>\nnormal"
+  },
+  "Text.italic": {
+    "code": "\u003cBox flexDirection=\"column\">\n  \u003cText italic>italic\u003c/Text>\n  \u003cText>normal\u003c/Text>\n\u003c/Box>",
+    "html": "\u003cspan style=\"font-style:italic\">italic\u003c/span>\nnormal"
+  },
+  "Text.underline": {
+    "code": "\u003cText underline>underlined\u003c/Text>",
+    "html": "\u003cspan style=\"text-decoration:underline\">underlined\u003c/span>"
+  },
+  "Text.strikethrough": {
+    "code": "\u003cText strikethrough>strikethrough\u003c/Text>",
+    "html": "\u003cspan style=\"text-decoration:line-through\">strikethrough\u003c/span>"
+  },
+  "Text.dimColor": {
+    "code": "\u003cBox flexDirection=\"column\">\n  \u003cText dimColor>dimmed\u003c/Text>\n  \u003cText>normal\u003c/Text>\n\u003c/Box>",
+    "html": "\u003cspan style=\"opacity:.6\">dimmed\u003c/span>\nnormal"
+  },
+  "Text.inverse": {
+    "code": "\u003cBox flexDirection=\"column\">\n  \u003cText inverse> inverse \u003c/Text>\n  \u003cText color=\"cyan\" inverse> inverse cyan \u003c/Text>\n\u003c/Box>",
+    "html": "\u003cspan style=\"color:#000000;background-color:#c9d1d9\"> inverse \u003c/span>\n\u003cspan style=\"color:#000000;background-color:#11a8cd\"> inverse cyan \u003c/span>"
+  },
+  "Text.wrap": {
+    "code": "\u003cBox width={14} borderStyle=\"round\" paddingX={1} flexDirection=\"column\" gap={1}>\n  \u003cText wrap=\"truncate\">truncated at the edge\u003c/Text>\n  \u003cText>wraps onto several lines\u003c/Text>\n\u003c/Box>",
+    "html": "╭────────────╮\n│ truncated… │\n│            │\n│ wraps onto │\n│  several   │\n│ lines      │\n╰────────────╯"
+  },
+  "Badge": {
+    "code": "\u003cBox gap={1}>\n  \u003cBadge color=\"green\">PASS\u003c/Badge>\n  \u003cBadge color=\"red\">FAIL\u003c/Badge>\n  \u003cBadge color=\"yellow\">WARN\u003c/Badge>\n\u003c/Box>",
+    "html": "\u003cspan style=\"background-color:#0dbc79\"> \u003c/span>\u003cspan style=\"color:#000000;background-color:#0dbc79\">PASS\u003c/span>\u003cspan style=\"background-color:#0dbc79\"> \u003c/span> \u003cspan style=\"background-color:#cd3131\"> \u003c/span>\u003cspan style=\"color:#000000;background-color:#cd3131\">FAIL\u003c/span>\u003cspan style=\"background-color:#cd3131\"> \u003c/span> \u003cspan style=\"background-color:#e5e510\"> \u003c/span>\u003cspan style=\"color:#000000;background-color:#e5e510\">WARN\u003c/span>\u003cspan style=\"background-color:#e5e510\"> \u003c/span>"
+  },
+  "StatusMessage": {
+    "code": "\u003cBox flexDirection=\"column\">\n  \u003cStatusMessage variant=\"success\">Deployed to production\u003c/StatusMessage>\n  \u003cStatusMessage variant=\"error\">2 tests failed\u003c/StatusMessage>\n  \u003cStatusMessage variant=\"warning\">Cache is stale\u003c/StatusMessage>\n  \u003cStatusMessage variant=\"info\">Version 2.0.0 available\u003c/StatusMessage>\n\u003c/Box>",
+    "html": "\u003cspan style=\"color:#0dbc79\">✔\u003c/span> Deployed to production\n\u003cspan style=\"color:#cd3131\">✘\u003c/span> 2 tests failed\n\u003cspan style=\"color:#e5e510\">⚠\u003c/span> Cache is stale\n\u003cspan style=\"color:#2472c8\">ℹ\u003c/span> Version 2.0.0 available"
+  },
+  "Alert": {
+    "code": "\u003cBox flexDirection=\"column\" gap={1}>\n  \u003cAlert variant=\"success\" title=\"Saved\">Your changes were written to disk.\u003c/Alert>\n  \u003cAlert variant=\"warning\">Running low on disk space.\u003c/Alert>\n\u003c/Box>",
+    "html": "\u003cspan style=\"color:#0dbc79\">╭──────────────────────────────────────╮\u003c/span>\n\u003cspan style=\"color:#0dbc79\">│\u003c/span> \u003cspan style=\"color:#0dbc79\">✔\u003c/span> \u003cspan style=\"font-weight:bold\">Saved\u003c/span>                              \u003cspan style=\"color:#0dbc79\">│\u003c/span>\n\u003cspan style=\"color:#0dbc79\">│\u003c/span>                                      \u003cspan style=\"color:#0dbc79\">│\u003c/span>\n\u003cspan style=\"color:#0dbc79\">│\u003c/span>   Your changes were written to disk. \u003cspan style=\"color:#0dbc79\">│\u003c/span>\n\u003cspan style=\"color:#0dbc79\">╰──────────────────────────────────────╯\u003c/span>\n\n\u003cspan style=\"color:#e5e510\">╭──────────────────────────────────────╮\u003c/span>\n\u003cspan style=\"color:#e5e510\">│\u003c/span> \u003cspan style=\"color:#e5e510\">⚠\u003c/span> Running low on disk space.         \u003cspan style=\"color:#e5e510\">│\u003c/span>\n\u003cspan style=\"color:#e5e510\">╰──────────────────────────────────────╯\u003c/span>"
+  },
+  "Spinner": {
+    "code": "\u003cSpinner label=\"Loading…\" />",
+    "html": "\u003cspan style=\"color:#2472c8\">⠋\u003c/span> Loading…",
+    "note": "Animated when run — this is the first frame."
+  },
+  "ProgressBar": {
+    "code": "\u003cBox width={24}>\n  \u003cProgressBar value={60} />\n\u003c/Box>",
+    "html": "\u003cspan style=\"color:#bc3fbc\">██████████████\u003c/span>\u003cspan style=\"opacity:.6\">░░░░░░░░░░\u003c/span>"
+  },
+  "UnorderedList": {
+    "code": "\u003cUnorderedList>\n  \u003cUnorderedList.Item>\u003cText>Clone the repo\u003c/Text>\u003c/UnorderedList.Item>\n  \u003cUnorderedList.Item>\u003cText>Install dependencies\u003c/Text>\u003c/UnorderedList.Item>\n  \u003cUnorderedList.Item>\u003cText>Run the dev server\u003c/Text>\u003c/UnorderedList.Item>\n\u003c/UnorderedList>",
+    "html": "\u003cspan style=\"opacity:.6\">─\u003c/span> Clone the repo\n\u003cspan style=\"opacity:.6\">─\u003c/span> Install dependencies\n\u003cspan style=\"opacity:.6\">─\u003c/span> Run the dev server"
+  },
+  "OrderedList": {
+    "code": "\u003cOrderedList>\n  \u003cOrderedList.Item>\u003cText>First\u003c/Text>\u003c/OrderedList.Item>\n  \u003cOrderedList.Item>\u003cText>Second\u003c/Text>\u003c/OrderedList.Item>\n  \u003cOrderedList.Item>\u003cText>Third\u003c/Text>\u003c/OrderedList.Item>\n\u003c/OrderedList>",
+    "html": "\u003cspan style=\"opacity:.6\">1.\u003c/span> First\n\u003cspan style=\"opacity:.6\">2.\u003c/span> Second\n\u003cspan style=\"opacity:.6\">3.\u003c/span> Third"
+  },
+  "TextInput": {
+    "code": "\u003cTextInput placeholder=\"Your name…\" onSubmit={handle} />",
+    "html": "\u003cspan style=\"color:#000000;background-color:#c9d1d9\">Y\u003c/span>\u003cspan style=\"opacity:.6\">our name…\u003c/span>",
+    "note": "Editable when run — shows the placeholder until you type."
+  },
+  "EmailInput": {
+    "code": "\u003cEmailInput placeholder=\"you@example.com\" onSubmit={handle} />",
+    "html": "\u003cspan style=\"color:#000000;background-color:#c9d1d9\">y\u003c/span>\u003cspan style=\"opacity:.6\">ou@example.com\u003c/span>",
+    "note": "Autocompletes the domain after “@” when run."
+  },
+  "PasswordInput": {
+    "code": "\u003cPasswordInput placeholder=\"Password\" onSubmit={handle} />",
+    "html": "\u003cspan style=\"color:#000000;background-color:#c9d1d9\">P\u003c/span>\u003cspan style=\"opacity:.6\">assword\u003c/span>",
+    "note": "Masks each character as you type when run."
+  },
+  "ConfirmInput": {
+    "code": "\u003cConfirmInput onConfirm={save} onCancel={quit} />",
+    "html": "Y/n",
+    "note": "Press Y / N (or Enter for the default) when run."
+  },
+  "Select": {
+    "code": "\u003cSelect\n  options={[\n    { label: \"Red\", value: \"red\" },\n    { label: \"Green\", value: \"green\" },\n    { label: \"Blue\", value: \"blue\" },\n  ]}\n  onChange={setColor}\n/>",
+    "html": "\u003cspan style=\"color:#2472c8\">❯\u003c/span> \u003cspan style=\"color:#2472c8\">Red\u003c/span>\n  Green\n  Blue",
+    "note": "Navigate with ↑ / ↓ and pick with Enter when run."
+  },
+  "MultiSelect": {
+    "code": "\u003cMultiSelect\n  options={[\n    { label: \"Red\", value: \"red\" },\n    { label: \"Green\", value: \"green\" },\n    { label: \"Blue\", value: \"blue\" },\n  ]}\n  onSubmit={setColors}\n/>",
+    "html": "\u003cspan style=\"color:#2472c8\">❯\u003c/span> \u003cspan style=\"color:#2472c8\">Red\u003c/span>\n  Green\n  Blue",
+    "note": "Toggle with Space, submit with Enter when run."
+  }
+};</script>
+<!-- EXAMPLES:END -->
+
+<script>
+// ── Data: pulled verbatim from node_modules/ink + @inkjs/ui .d.ts files ──
+const COLOR = "string  (chalk color name or hex)";
+const NUMSTR = "number | string";
+
+const DATA = [
+  // ── COMPONENTS ──────────────────────────────────────────────
+  { name: "<Box>", kind: "component", import: 'import { Box } from "ink"',
+    sig: "<Box flexDirection=\"column\" padding={1} borderStyle=\"round\"> … </Box>",
+    desc: "The layout primitive — a flexbox container (like a CSS <div> with display:flex). Holds other Boxes and Text. Cannot directly contain raw strings; wrap text in <Text>.",
+    props: [
+      ["flexDirection", "'row' | 'column' | 'row-reverse' | 'column-reverse'", "row", "Main axis: lay children out across (row) or down (column)."],
+      ["justifyContent", "'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'", "flex-start", "Alignment along the main axis."],
+      ["alignItems", "'flex-start' | 'center' | 'flex-end' | 'stretch' | 'baseline'", "stretch", "Alignment along the cross axis."],
+      ["alignSelf", "'flex-start' | 'center' | 'flex-end' | 'auto' | 'stretch' | 'baseline'", "auto", "Override alignItems for this one element."],
+      ["alignContent", "'flex-start' | 'flex-end' | 'center' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'", "–", "Cross-axis alignment when wrapping onto multiple lines."],
+      ["flexGrow", "number", "0", "How much this item grows to fill spare space."],
+      ["flexShrink", "number", "1", "How much this item shrinks when space is tight."],
+      ["flexBasis", NUMSTR, "–", "Initial size before grow/shrink is applied."],
+      ["flexWrap", "'nowrap' | 'wrap' | 'wrap-reverse'", "nowrap", "Allow children to flow onto multiple lines."],
+      ["gap", "number", "0", "Spacing between children (shorthand for rowGap + columnGap)."],
+      ["rowGap", "number", "0", "Vertical gap between rows."],
+      ["columnGap", "number", "0", "Horizontal gap between columns."],
+      ["width", NUMSTR, "auto", "Width in cells, or a '%' of the parent."],
+      ["height", NUMSTR, "auto", "Height in rows, or a '%' of the parent."],
+      ["minWidth / minHeight", NUMSTR, "–", "Lower bounds on size."],
+      ["maxWidth / maxHeight", NUMSTR, "–", "Upper bounds on size."],
+      ["aspectRatio", "number", "–", "width/height ratio; pair with one size constraint."],
+      ["padding", "number", "0", "Inner spacing, all sides."],
+      ["paddingX / paddingY", "number", "0", "Inner spacing, horizontal / vertical."],
+      ["paddingTop / paddingBottom / paddingLeft / paddingRight", "number", "0", "Inner spacing, one side."],
+      ["margin", "number", "0", "Outer spacing, all sides."],
+      ["marginX / marginY", "number", "0", "Outer spacing, horizontal / vertical."],
+      ["marginTop / marginBottom / marginLeft / marginRight", "number", "0", "Outer spacing, one side."],
+      ["borderStyle", "'single' | 'double' | 'round' | 'bold' | 'singleDouble' | 'doubleSingle' | 'classic' | 'arrow' | BoxStyle", "–", "Draw a border. Omit for no border."],
+      ["borderColor", COLOR, "–", "Border color (shorthand for all four sides)."],
+      ["borderTop / borderBottom / borderLeft / borderRight", "boolean", "true", "Toggle visibility of one border edge."],
+      ["borderDimColor", "boolean", "false", "Dim the border color. Per-side variants exist too."],
+      ["borderTopColor / …RightColor / …BottomColor / …LeftColor", COLOR, "–", "Per-edge border color."],
+      ["borderBackgroundColor", COLOR, "–", "Border background color (per-edge variants exist)."],
+      ["backgroundColor", COLOR, "–", "Fill color behind the box's content."],
+      ["display", "'flex' | 'none'", "flex", "Set to 'none' to hide the element entirely."],
+      ["overflow / overflowX / overflowY", "'visible' | 'hidden'", "visible", "Clip content that exceeds the box."],
+      ["position", "'relative' | 'absolute' | 'static'", "relative", "Positioning scheme. 'static' ignores top/right/bottom/left."],
+      ["top / right / bottom / left", NUMSTR, "–", "Offsets for positioned elements."],
+      ["aria-label / aria-hidden / aria-role", "string / boolean / role", "–", "Screen-reader metadata."],
+      ["aria-state", "{ busy?, checked?, disabled?, expanded?, … : boolean }", "–", "Screen-reader state flags (busy, checked, disabled, expanded, multiline, multiselectable, readonly, required, selected)."],
+    ] },
+
+  { name: "<Text>", kind: "component", import: 'import { Text } from "ink"',
+    sig: "<Text color=\"cyan\" bold>hello</Text>",
+    desc: "The only component that renders actual characters. All text must live inside a <Text>. Style props can nest (a <Text> inside a <Text>).",
+    props: [
+      ["children", "ReactNode", "–", "The text (or nested <Text>) to display."],
+      ["color", COLOR, "–", "Foreground color. Chalk names ('red', 'cyan') or hex ('#ff8800')."],
+      ["backgroundColor", COLOR, "–", "Background color."],
+      ["bold", "boolean", "false", "Bold weight."],
+      ["italic", "boolean", "false", "Italic (terminal support varies)."],
+      ["underline", "boolean", "false", "Underlined."],
+      ["strikethrough", "boolean", "false", "Crossed out."],
+      ["dimColor", "boolean", "false", "Make the color less bright."],
+      ["inverse", "boolean", "false", "Swap foreground and background colors."],
+      ["wrap", "'wrap' | 'truncate' | 'truncate-start' | 'truncate-middle' | 'truncate-end' | 'hard'", "wrap", "How to handle text wider than its container."],
+      ["aria-label / aria-hidden", "string / boolean", "–", "Screen-reader metadata."],
+    ] },
+
+  { name: "<Newline>", kind: "component", import: 'import { Newline } from "ink"',
+    sig: "<Text>line one<Newline />line two</Text>",
+    desc: "Inserts newline characters. Must be used inside a <Text>.",
+    props: [ ["count", "number", "1", "Number of newlines to insert."] ] },
+
+  { name: "<Spacer>", kind: "component", import: 'import { Spacer } from "ink"',
+    sig: "<Box><Text>left</Text><Spacer /><Text>right</Text></Box>",
+    desc: "A flexible gap that expands to fill all available space along the parent's main axis. The easy way to push two things to opposite ends.",
+    props: [] },
+
+  { name: "<Static>", kind: "component", import: 'import { Static } from "ink"',
+    sig: "<Static items={logs}>{(line, i) => <Text key={i}>{line}</Text>}</Static>",
+    desc: "Renders output permanently above the live UI and never redraws it — ideal for ever-growing logs or completed tasks (so they don't get re-rendered every frame). Give each item a key.",
+    props: [
+      ["items", "T[]", "–", "Array of items to render once."],
+      ["children", "(item: T, index: number) => ReactNode", "–", "Render function called per item."],
+      ["style", "Box styles", "–", "Styles for the container (same props as <Box>)."],
+    ] },
+
+  { name: "<Transform>", kind: "component", import: 'import { Transform } from "ink"',
+    sig: "<Transform transform={s => s.toUpperCase()}><Text>hi</Text></Transform>",
+    desc: "Transforms the final string output of its children (after styling → ANSI). Use for gradients, clickable links, or text effects that need a string, not React nodes.",
+    props: [
+      ["transform", "(children: string, index: number) => string", "–", "Receives rendered output, returns the transformed string."],
+      ["children", "ReactNode", "–", "Content to transform."],
+      ["accessibilityLabel", "string", "–", "Screen-reader text; if set, children are ignored for SR."],
+    ] },
+
+  // ── API ─────────────────────────────────────────────────────
+  { name: "render()", kind: "api", import: 'import { render } from "ink"',
+    sig: "const { unmount, waitUntilExit, rerender, clear, cleanup, waitUntilRenderFlush } = render(<App />, options?)",
+    desc: "Mounts a component and starts drawing. Returns an instance with lifecycle controls. The entry point of every Ink program.",
+    props: [
+      ["returns: unmount()", "() => void", "–", "Tear down the app."],
+      ["returns: waitUntilExit()", "() => Promise", "–", "Resolves when the app unmounts (value passed to exit())."],
+      ["returns: rerender(node)", "function", "–", "Replace/update the root node."],
+      ["returns: clear()", "() => void", "–", "Clear the rendered output."],
+      ["returns: cleanup()", "() => void", "–", "Unmount AND forget the instance for this stdout, so a fresh render() can start on the same stream."],
+      ["returns: waitUntilRenderFlush()", "() => Promise", "–", "Resolves once pending output has been flushed to stdout (useful after rerender())."],
+      ["opt: stdout / stdin / stderr", "stream", "process.*", "Override the I/O streams."],
+      ["opt: exitOnCtrlC", "boolean", "true", "Let Ink handle Ctrl+C to exit."],
+      ["opt: patchConsole", "boolean", "true", "Keep console.* output from clobbering the UI."],
+      ["opt: debug", "boolean", "false", "Render each frame separately instead of replacing."],
+      ["opt: alternateScreen", "boolean", "false", "Use the terminal's alternate buffer (like vim/htop)."],
+      ["opt: maxFps", "number", "30", "Cap on render frequency."],
+      ["opt: incrementalRendering", "boolean", "false", "Only redraw changed lines (less flicker)."],
+      ["opt: onRender", "(metrics) => void", "–", "Callback after each committed frame."],
+      ["opt: isScreenReaderEnabled", "boolean", "env", "Enable screen-reader output (default: INK_SCREEN_READER === 'true')."],
+      ["opt: concurrent", "boolean", "false", "Enable React concurrent rendering (Suspense, useTransition, useDeferredValue)."],
+      ["opt: kittyKeyboard", "KittyKeyboardOptions", "–", "Opt into the kitty keyboard protocol for richer key events (see KittyKeyboardOptions)."],
+      ["opt: interactive", "boolean", "auto", "Override interactive-mode detection (auto = false in CI or when stdout isn't a TTY)."],
+    ] },
+
+  { name: "renderToString()", kind: "api", import: 'import { renderToString } from "ink"',
+    sig: "const output = renderToString(<Box padding={1}><Text color=\"green\">Hi</Text></Box>, { columns: 40 })",
+    desc: "Renders an element to a plain string synchronously — no stdout writes, no terminal listeners, no persistent app. NOT interactive: terminal hooks (useInput, useStdin, useFocus, ...) become no-ops, and the returned string reflects the initial render only (state updates from useEffect are ignored; useLayoutEffect updates ARE applied).",
+    props: [
+      ["node", "ReactNode", "–", "The element to render. Required."],
+      ["opt: columns", "number", "80", "Width of the virtual terminal in columns."],
+      ["returns", "string", "–", "The rendered output. <Static> content is prepended; a component throw propagates to the caller after cleanup."],
+    ] },
+
+  { name: "measureElement()", kind: "api", import: 'import { measureElement } from "ink"',
+    sig: "const { width, height } = measureElement(ref.current)",
+    desc: "Measures the actual width/height of a <Box> element (grab the node via ref). Returns {width: 0, height: 0} if called DURING RENDER — layout isn't computed yet, so call it from useEffect / input handlers / timers, and list your content in the effect's deps so it re-measures when it changes.",
+    props: [
+      ["node", "DOMElement", "–", "The <Box> to measure, obtained via ref={...}."],
+      ["returns: width", "number", "–", "Element width."],
+      ["returns: height", "number", "–", "Element height."],
+    ] },
+
+  // ── TYPES ───────────────────────────────────────────────────
+  { name: "DOMElement", kind: "type", import: 'import { type DOMElement } from "ink"',
+    sig: "const ref = useRef<DOMElement>(null);  <Box ref={ref}> … </Box>",
+    desc: "The node type of Ink's internal element tree — what a ref on <Box> resolves to and what measureElement() / useBoxMetrics() expect. NOT a browser DOM element — treat it as an opaque handle and read layout via measureElement() instead of mutating its fields.",
+    props: [
+      ["nodeName", "'ink-root' | 'ink-box' | 'ink-text' | 'ink-virtual-text'", "–", "Which internal element this is (<Box> → 'ink-box', <Text> → 'ink-text')."],
+      ["attributes", "Record<string, boolean | string | number>", "–", "Attributes set on the node by the reconciler."],
+      ["childNodes", "DOMNode[]  (DOMElement | TextNode)", "–", "Children; text leaves are TextNode ('#text' with a nodeValue string)."],
+      ["style", "Styles", "–", "Resolved Box/Text style props used for layout."],
+      ["parentNode", "DOMElement | undefined", "–", "Parent element; undefined at the tree root."],
+      ["yogaNode?", "YogaNode  (yoga-layout)", "–", "Underlying Yoga node holding computed layout."],
+      ["(internal fields)", "onRender?, internal_* , …", "–", "Render-lifecycle callbacks and bookkeeping Ink attaches — don't touch."],
+    ] },
+
+  { name: "SuspendTerminal", kind: "type", import: 'import type { SuspendTerminal } from "ink"',
+    sig: "const { suspendTerminal } = useApp();  await suspendTerminal(async () => runEditor());",
+    desc: "Type of useApp().suspendTerminal — temporarily hands the terminal to a child process (e.g. $EDITOR, less, fzf), then restores Ink's terminal state and forces a full redraw. PREFER THE CALLBACK OVERLOAD — Ink restores even if the callback throws; the zero-arg overload returns a TerminalSuspension YOU must resume() (or bind with `await using`).",
+    props: [
+      ["(callback)", "(callback: () => void | Promise<void>) => Promise<void>", "–", "Suspend, run the callback, then restore — even if the callback throws."],
+      ["()", "() => Promise<TerminalSuspension>", "–", "Suspend and return a handle; the terminal stays yours until resumed."],
+    ] },
+
+  { name: "TerminalSuspension", kind: "type", import: 'import type { TerminalSuspension } from "ink"',
+    sig: "await using suspension = await suspendTerminal();  // or: const s = await suspendTerminal(); ...; await s.resume()",
+    desc: "The handle returned by suspendTerminal() when called WITHOUT a callback. Ink stays suspended until you call resume() — prefer `await using` so the suspension is resumed automatically when it leaves scope.",
+    props: [
+      ["resume", "() => Promise<void>", "–", "Give terminal ownership back to Ink and redraw (readonly)."],
+      ["[Symbol.asyncDispose]", "() => Promise<void>", "–", "Same effect as resume(); powers `await using` auto-resume (readonly)."],
+    ] },
+
+  { name: "KittyKeyboardOptions", kind: "type", import: 'import type { KittyKeyboardOptions } from "ink"',
+    sig: "render(<App />, { kittyKeyboard: { mode: \"auto\", flags: [\"disambiguateEscapeCodes\"] } })",
+    desc: "Config for render()'s kittyKeyboard option: kitty keyboard protocol support for richer input (disambiguated keys, extra modifiers like super/hyper/capsLock/numLock). OPT-IN — the protocol is never enabled unless you pass kittyKeyboard; the default \"auto\" mode probes the terminal first, so unsupported terminals are unaffected.",
+    props: [
+      ["mode", "\"auto\" | \"enabled\" | \"disabled\"", "\"auto\"", "\"auto\" queries the terminal (200ms timeout) and enables only if it responds; \"enabled\" force-enables whenever stdin+stdout are TTYs (even in CI); \"disabled\" does nothing."],
+      ["flags", "KittyFlagName[]", "[\"disambiguateEscapeCodes\"]", "Protocol enhancements to request: \"disambiguateEscapeCodes\", \"reportEventTypes\", \"reportAlternateKeys\", \"reportAllKeysAsEscapeCodes\", \"reportAssociatedText\"."],
+    ] },
+
+  // ── HOOKS ───────────────────────────────────────────────────
+  { name: "useInput()", kind: "hook", import: 'import { useInput } from "ink"',
+    sig: "useInput((input, key) => { if (key.return) submit(); }, { isActive })",
+    desc: "Calls your handler on every keypress. `input` is the typed character(s); `key` is a flags object (see below). A whole pasted string arrives in one call.",
+    props: [
+      ["input", "string", "–", "The character(s) typed. Empty for pure modifier/arrow keys."],
+      ["key.upArrow / downArrow / leftArrow / rightArrow", "boolean", "–", "Arrow keys."],
+      ["key.return", "boolean", "–", "Enter."],
+      ["key.escape", "boolean", "–", "Esc."],
+      ["key.tab", "boolean", "–", "Tab."],
+      ["key.backspace / delete", "boolean", "–", "Backspace / Delete."],
+      ["key.ctrl / shift / meta", "boolean", "–", "Modifier keys held."],
+      ["key.pageUp / pageDown / home / end", "boolean", "–", "Navigation keys."],
+      ["key.super / hyper / capsLock / numLock", "boolean", "–", "Extra modifiers — only reported when the kitty keyboard protocol is enabled."],
+      ["key.eventType", "'press' | 'repeat' | 'release'", "–", "Key event type (kitty keyboard protocol only; undefined otherwise)."],
+      ["options.isActive", "boolean", "true", "Disable this handler (e.g. when another input is focused)."],
+    ] },
+
+  { name: "useApp()", kind: "hook", import: 'import { useApp } from "ink"',
+    sig: "const { exit, suspendTerminal, waitUntilRenderFlush } = useApp();",
+    desc: "App lifecycle controls. `exit()` is the clean way to end an Ink program (optionally with an error).",
+    props: [
+      ["exit", "(errorOrResult?: Error | unknown) => void", "–", "Unmount the app. A non-Error value resolves waitUntilExit() with it; an Error REJECTS it."],
+      ["suspendTerminal", "SuspendTerminal", "–", "Hand the terminal to a child process (e.g. $EDITOR), then restore Ink and redraw — see SuspendTerminal."],
+      ["waitUntilRenderFlush", "() => Promise", "–", "Resolves after pending render output is flushed to stdout."],
+    ] },
+
+  { name: "useFocus()", kind: "hook", import: 'import { useFocus } from "ink"',
+    sig: "const { isFocused } = useFocus({ autoFocus, id, isActive });",
+    desc: "Makes a component focusable. Using it opts the component into Tab-navigation; `isFocused` tells you if it's currently active.",
+    props: [
+      ["returns: isFocused", "boolean", "–", "Whether this component currently has focus."],
+      ["returns: focus(id)", "(id: string) => void", "–", "Focus another component by id."],
+      ["autoFocus", "boolean", "false", "Grab focus on mount if nothing else is focused."],
+      ["id", "string", "–", "Id so it can be focused programmatically."],
+      ["isActive", "boolean", "true", "Toggle focusability while keeping list position."],
+    ] },
+
+  { name: "useFocusManager()", kind: "hook", import: 'import { useFocusManager } from "ink"',
+    sig: "const { focusNext, focusPrevious, focus, activeId } = useFocusManager();",
+    desc: "Imperative focus controls for the whole app — move focus around without waiting for Tab.",
+    props: [
+      ["focusNext() / focusPrevious()", "() => void", "–", "Cycle focus forward / backward."],
+      ["focus(id)", "(id) => void", "–", "Focus a specific component by id."],
+      ["enableFocus() / disableFocus()", "() => void", "–", "Turn focus management on / off."],
+      ["activeId", "string | undefined", "–", "Id of the currently focused component."],
+    ] },
+
+  { name: "usePaste()", kind: "hook", import: 'import { usePaste } from "ink"',
+    sig: "usePaste(text => setValue(v => v + text));",
+    desc: "Fires when the user pastes. Bracketed-paste mode means the full pasted string (incl. newlines) arrives as one call, instead of being misread as many keypresses. Pairs with useInput.",
+    props: [
+      ["handler", "(text: string) => void", "–", "Called with the full pasted string."],
+      ["options.isActive", "boolean", "true", "Enable/disable the paste handler."],
+    ] },
+
+  { name: "useAnimation()", kind: "hook", import: 'import { useAnimation } from "ink"',
+    sig: "const { frame, time, delta, reset } = useAnimation({ interval: 80 });",
+    desc: "Drives animations off a shared timer. Use `frame` for spinner-style indexed sequences, `time`/`delta` for math/physics-based motion.",
+    props: [
+      ["returns: frame", "number", "–", "Counter incrementing by 1 each interval."],
+      ["returns: time", "number", "–", "Total elapsed ms since start/reset."],
+      ["returns: delta", "number", "–", "ms since the previous tick."],
+      ["returns: reset()", "() => void", "–", "Reset counters and restart timing."],
+      ["interval", "number", "100", "ms between ticks."],
+      ["isActive", "boolean", "true", "Pause when false; resets to 0 when re-enabled."],
+    ] },
+
+  { name: "useWindowSize()", kind: "hook", import: 'import { useWindowSize } from "ink"',
+    sig: "const { columns, rows } = useWindowSize();",
+    desc: "Current terminal dimensions; re-renders the component when the terminal is resized.",
+    props: [
+      ["columns", "number", "–", "Horizontal character cells."],
+      ["rows", "number", "–", "Vertical rows."],
+    ] },
+
+  { name: "useStdout()", kind: "hook", import: 'import { useStdout } from "ink"',
+    sig: "const { stdout, write } = useStdout();",
+    desc: "Access the stdout stream Ink renders to (e.g. to write directly).",
+    props: [] },
+
+  { name: "useStdin()", kind: "hook", import: 'import { useStdin } from "ink"',
+    sig: "const { stdin, isRawModeSupported, setRawMode } = useStdin();",
+    desc: "Access the stdin stream and raw-mode utilities for low-level input handling.",
+    props: [] },
+
+  { name: "useStderr()", kind: "hook", import: 'import { useStderr } from "ink"',
+    sig: "const { stderr, write } = useStderr();",
+    desc: "Access the stderr stream.",
+    props: [] },
+
+  { name: "useBoxMetrics()", kind: "hook", import: 'import { useBoxMetrics } from "ink"',
+    sig: "const ref = useRef(null); const { width, height, hasMeasured } = useBoxMetrics(ref);",
+    desc: "Measured layout of a <Box ref={ref}> — width/height/left/top — updated on resize or content change. Returns zeros until the first layout pass (check hasMeasured).",
+    props: [
+      ["width / height", "number", "0", "Measured size of the element."],
+      ["left / top", "number", "0", "Position relative to the parent."],
+      ["hasMeasured", "boolean", "false", "Whether the tracked element was measured in the latest layout pass (not latching — reverts to false, with zeros, if the ref detaches)."],
+    ] },
+
+  { name: "useCursor()", kind: "hook", import: 'import { useCursor } from "ink"',
+    sig: "const { setCursorPosition } = useCursor();",
+    desc: "Control the terminal cursor position (mainly for IME / composing-character support). Pass undefined to hide it.",
+    props: [ ["setCursorPosition(pos?)", "(pos | undefined) => void", "–", "Show the cursor at coords, or hide it."] ] },
+
+  { name: "useIsScreenReaderEnabled()", kind: "hook", import: 'import { useIsScreenReaderEnabled } from "ink"',
+    sig: "const sr = useIsScreenReaderEnabled();",
+    desc: "Whether a screen reader is active, so you can render alternative output.",
+    props: [] },
+
+  // ── INK UI (@inkjs/ui) ──────────────────────────────────────
+  { name: "<Badge>", kind: "ui", import: 'import { Badge } from "@inkjs/ui"',
+    sig: "<Badge color=\"green\">PASS</Badge>",
+    desc: "A small colored label / pill — text on a solid background. Good for inline statuses like PASS, NEW, or a count.",
+    props: [
+      ["children", "ReactNode", "–", "The label content."],
+      ["color", COLOR, "magenta", "Background color of the badge (chalk color name or hex)."],
+    ] },
+
+  { name: "<StatusMessage>", kind: "ui", import: 'import { StatusMessage } from "@inkjs/ui"',
+    sig: "<StatusMessage variant=\"success\">Saved</StatusMessage>",
+    desc: "A single line of text prefixed with a colored status icon (✔ ✖ ⚠ ℹ). For inline success / error / warning / info feedback.",
+    props: [
+      ["children", "ReactNode", "–", "The message text."],
+      ["variant", "'info' | 'success' | 'error' | 'warning'", "–", "Chooses the icon and color."],
+    ] },
+
+  { name: "<Alert>", kind: "ui", import: 'import { Alert } from "@inkjs/ui"',
+    sig: "<Alert variant=\"info\" title=\"Heads up\">Disk almost full.</Alert>",
+    desc: "A bordered, colored callout with an icon, optional title, and message — a more prominent cousin of StatusMessage.",
+    props: [
+      ["children", "ReactNode", "–", "The message body."],
+      ["variant", "'info' | 'success' | 'error' | 'warning'", "–", "Chooses the border + icon color."],
+      ["title", "string", "–", "Optional bold heading shown above the message."],
+    ] },
+
+  { name: "<Spinner>", kind: "ui", import: 'import { Spinner } from "@inkjs/ui"',
+    sig: "<Spinner label=\"Loading…\" />",
+    desc: "An animated loading indicator with an optional label. Cycles frames over time on its own (no state needed).",
+    props: [
+      ["label", "string", "–", "Text shown next to the spinner."],
+      ["type", "SpinnerName  (cli-spinners)", "dots", "Which animation to use, e.g. 'dots', 'line', 'star'."],
+    ] },
+
+  { name: "useSpinner()", kind: "ui", import: 'import { useSpinner } from "@inkjs/ui"',
+    sig: "const { frame } = useSpinner({ type: \"dots\" });\nreturn <Text>{frame} Loading…</Text>;",
+    desc: "The animation engine behind <Spinner>: returns the current frame string and re-renders your component on the spinner's own interval. NO TIMER NEEDED — just render `frame` in a <Text>; label, color and placement are up to you.",
+    props: [
+      ["type", "SpinnerName  (cli-spinners)", "dots", "Which animation to use, e.g. 'dots', 'line', 'star'."],
+      ["returns: frame", "string", "–", "The current animation frame, e.g. '⠋'. Advances automatically."],
+    ] },
+
+  { name: "<ProgressBar>", kind: "ui", import: 'import { ProgressBar } from "@inkjs/ui"',
+    sig: "<Box width={24}><ProgressBar value={60} /></Box>",
+    desc: "A horizontal bar that fills its container's width to show progress. Wrap it in a sized <Box>.",
+    props: [
+      ["value", "number", "0", "Progress from 0 to 100."],
+    ] },
+
+  { name: "<UnorderedList>", kind: "ui", import: 'import { UnorderedList } from "@inkjs/ui"',
+    sig: "<UnorderedList><UnorderedList.Item>…</UnorderedList.Item></UnorderedList>",
+    desc: "A bulleted list. Put <UnorderedList.Item> children inside; lists can be nested for sub-bullets.",
+    props: [
+      ["children", "ReactNode", "–", "One or more <UnorderedList.Item> (and nested lists)."],
+      ["UnorderedList.Item", "component", "–", "Wraps one item's content (a <Text> or a nested list)."],
+    ] },
+
+  { name: "<OrderedList>", kind: "ui", import: 'import { OrderedList } from "@inkjs/ui"',
+    sig: "<OrderedList><OrderedList.Item>…</OrderedList.Item></OrderedList>",
+    desc: "A numbered list. Put <OrderedList.Item> children inside; nesting restarts numbering at each level.",
+    props: [
+      ["children", "ReactNode", "–", "One or more <OrderedList.Item> (and nested lists)."],
+      ["OrderedList.Item", "component", "–", "Wraps one item's content (a <Text> or a nested list)."],
+    ] },
+
+  { name: "<TextInput>", kind: "ui", import: 'import { TextInput } from "@inkjs/ui"',
+    sig: "<TextInput placeholder=\"Name\" onSubmit={handle} />",
+    desc: "A single-line text field with optional autocomplete. UNCONTROLLED — read the value via onChange / onSubmit; seed it with defaultValue. There is NO public programmatic API in v2 (the internal state hooks are not exported), so to clear/reset it, remount with a changing key. Supersedes the standalone ink-text-input package (still installed here, but used only by src/archive/).",
+    props: [
+      ["placeholder", "string", "–", "Shown (dimmed) while empty."],
+      ["defaultValue", "string", "–", "Initial value."],
+      ["suggestions", "string[]", "–", "Autocomplete candidates."],
+      ["isDisabled", "boolean", "false", "Ignore keystrokes when true."],
+      ["onChange", "(value: string) => void", "–", "Fires on every keystroke."],
+      ["onSubmit", "(value: string) => void", "–", "Fires when Enter is pressed."],
+    ] },
+
+  { name: "<EmailInput>", kind: "ui", import: 'import { EmailInput } from "@inkjs/ui"',
+    sig: "<EmailInput placeholder=\"you@example.com\" onSubmit={handle} />",
+    desc: "Like TextInput, but autocompletes the part after “@” from a list of common email domains.",
+    props: [
+      ["placeholder", "string", "–", "Shown (dimmed) while empty."],
+      ["defaultValue", "string", "–", "Initial value."],
+      ["domains", "string[]", "gmail.com, …", "Email domains offered for autocomplete."],
+      ["isDisabled", "boolean", "false", "Ignore keystrokes when true."],
+      ["onChange", "(value: string) => void", "–", "Fires on every keystroke."],
+      ["onSubmit", "(value: string) => void", "–", "Fires when Enter is pressed."],
+    ] },
+
+  { name: "<PasswordInput>", kind: "ui", import: 'import { PasswordInput } from "@inkjs/ui"',
+    sig: "<PasswordInput placeholder=\"Password\" onSubmit={handle} />",
+    desc: "Like TextInput, but masks every character (shows asterisks) for secret entry.",
+    props: [
+      ["placeholder", "string", "–", "Shown (dimmed) while empty."],
+      ["isDisabled", "boolean", "false", "Ignore keystrokes when true."],
+      ["onChange", "(value: string) => void", "–", "Fires on every keystroke."],
+      ["onSubmit", "(value: string) => void", "–", "Fires when Enter is pressed."],
+    ] },
+
+  { name: "<ConfirmInput>", kind: "ui", import: 'import { ConfirmInput } from "@inkjs/ui"',
+    sig: "<ConfirmInput onConfirm={save} onCancel={quit} />",
+    desc: "A yes / no prompt rendered as “Y/n”. Enter picks the default choice; Y or N choose explicitly.",
+    props: [
+      ["onConfirm", "() => void", "–", "Called on confirm. Required."],
+      ["onCancel", "() => void", "–", "Called on cancel. Required."],
+      ["defaultChoice", "'confirm' | 'cancel'", "confirm", "Which choice Enter selects (and which letter is capitalized)."],
+      ["submitOnEnter", "boolean", "true", "Whether Enter submits the default choice."],
+      ["isDisabled", "boolean", "false", "Ignore keystrokes when true."],
+    ] },
+
+  { name: "<Select>", kind: "ui", import: 'import { Select } from "@inkjs/ui"',
+    sig: "<Select options={items} onChange={setValue} />",
+    desc: "A single-choice menu navigated with ↑ / ↓ and chosen with Enter. Options are { label, value } objects.",
+    props: [
+      ["options", "Option[]  ({ label, value })", "–", "The choices. Required."],
+      ["defaultValue", "string", "–", "Initially selected value. The highlight/focus still starts on the first option."],
+      ["visibleOptionCount", "number", "5", "How many rows to show before scrolling."],
+      ["highlightText", "string", "–", "Substring to highlight in labels (e.g. when filtering)."],
+      ["isDisabled", "boolean", "false", "Ignore keystrokes when true."],
+      ["onChange", "(value: string) => void", "–", "Fires when the selected option changes."],
+    ] },
+
+  { name: "<MultiSelect>", kind: "ui", import: 'import { MultiSelect } from "@inkjs/ui"',
+    sig: "<MultiSelect options={items} onSubmit={setValues} />",
+    desc: "Like Select, but toggle several options with Space and submit the set with Enter.",
+    props: [
+      ["options", "Option[]  ({ label, value })", "–", "The choices. Required."],
+      ["defaultValue", "string[]", "–", "Initially selected values."],
+      ["visibleOptionCount", "number", "5", "How many rows to show before scrolling."],
+      ["highlightText", "string", "–", "Substring to highlight in labels (e.g. when filtering)."],
+      ["isDisabled", "boolean", "false", "Ignore keystrokes when true."],
+      ["onChange", "(value: string[]) => void", "–", "Fires when the selection changes."],
+      ["onSubmit", "(value: string[]) => void", "–", "Fires on Enter with the selected values."],
+    ] },
+
+  { name: "<ThemeProvider>", kind: "ui", import: 'import { ThemeProvider, defaultTheme, extendTheme } from "@inkjs/ui"',
+    sig: "<ThemeProvider theme={extendTheme(defaultTheme, {…})}>…</ThemeProvider>",
+    desc: "Wrap your app to restyle all @inkjs/ui components. Build a theme with extendTheme(defaultTheme, overrides); defaultTheme is the built-in one.",
+    props: [
+      ["children", "ReactNode", "–", "Your app."],
+      ["theme", "Theme", "–", "The theme to apply (usually from extendTheme)."],
+      ["defaultTheme", "Theme  (export)", "–", "The built-in theme to extend."],
+      ["extendTheme", "(base, overrides) => Theme  (export)", "–", "Merge overrides onto a base theme (module export, not a prop)."],
+    ] },
+
+  { name: "useComponentTheme()", kind: "ui", import: 'import { useComponentTheme } from "@inkjs/ui"',
+    sig: "const { styles, config } = useComponentTheme(\"Spinner\");",
+    desc: "Reads one component's slice of the active theme — theme.components[name] from the nearest ThemeProvider (defaultTheme if none). The styles/config entries are FUNCTIONS — call and spread styles.label(), not styles.label itself.",
+    props: [
+      ["component", "string", "–", "Key into theme.components (e.g. \"Spinner\"). Required; unknown keys return undefined."],
+      ["returns: styles", "Record<string, (props?) => ComponentStyles>", "–", "Named style functions; call one and spread the result onto Box/Text. May be absent."],
+      ["returns: config", "(props?) => Record<string, unknown>", "–", "Non-style settings for the component. May be absent."],
+    ] },
+
+  { name: "ComponentTheme", kind: "ui", import: 'import type { ComponentTheme } from "@inkjs/ui"',
+    sig: "{ styles: { frame: () => ({ color: \"magenta\" }) }, config: () => ({…}) }",
+    desc: "The theme slice for ONE component — Theme.components maps component name (e.g. \"Spinner\") to a ComponentTheme. Both fields hold FUNCTIONS that return objects ((props) => styles), never plain style objects.",
+    props: [
+      ["styles", "Record<string, (props?) => ComponentStyles>", "–", "The component's named parts (e.g. Spinner has \"container\", \"frame\", \"label\") mapped to functions returning style props (Box/Text props in practice)."],
+      ["config", "(props?) => Record<string, unknown>", "–", "Function returning non-style options (e.g. ProgressBar's completedCharacter / remainingCharacter)."],
+    ] },
+];
+
+const KIND_LABEL = { component: "Components", api: "Top-level API", type: "Types", hook: "Hooks", ui: "Ink UI" };
+const KIND_ORDER = ["component", "api", "type", "hook", "ui"];
+
+function slug(name) { return name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase(); }
+
+// Live examples (baked in by src/gen-examples.tsx). Canonical key = entry name
+// with <>() stripped + "." + the prop's first token (handles "paddingX / paddingY").
+const EXAMPLES = window.EXAMPLES || {};
+function exampleKey(entryName, propName) {
+  return entryName.replace(/[<>()]/g, "").trim() + "." + propName.split(/[ /]/)[0];
+}
+
+// Build nav (grouped) + cards
+const nav = document.getElementById("nav");
+const cards = document.getElementById("cards");
+
+for (const kind of KIND_ORDER) {
+  const items = DATA.filter(d => d.kind === kind);
+  if (!items.length) continue;
+  const grp = document.createElement("div");
+  grp.className = "nav-group"; grp.textContent = KIND_LABEL[kind];
+  nav.appendChild(grp);
+  for (const d of items) {
+    const a = document.createElement("a");
+    a.href = "#" + slug(d.name); a.textContent = d.name;
+    a.dataset.key = (d.name + " " + d.import + " " + d.desc).toLowerCase();
+    nav.appendChild(a);
+  }
+}
+
+for (const d of DATA) {
+  const card = document.createElement("section");
+  card.className = "card"; card.id = slug(d.name);
+  const haystack = (d.name + " " + d.import + " " + d.desc + " " + d.props.map(p => p[0] + " " + p[1] + " " + p[3]).join(" ")).toLowerCase();
+  card.dataset.search = haystack;
+
+  let propsHtml = "";
+  if (d.props.length) {
+    propsHtml = `<table><thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>` +
+      d.props.map(p => {
+        const key = exampleKey(d.name, p[0]);
+        const hasEx = !!EXAMPLES[key];
+        const nameCell = hasEx
+          ? `<td class="name" role="button" tabindex="0" data-ex="${key}"><code>${escapeHtml(p[0])}</code></td>`
+          : `<td class="name"><code>${escapeHtml(p[0])}</code></td>`;
+        return `<tr class="prop-row${hasEx ? ' has-example' : ''}" data-p="${escapeHtml((p[0]+' '+p[3]).toLowerCase())}">
+        ${nameCell}
+        <td class="type"><code>${escapeHtml(p[1])}</code></td>
+        <td class="def"><code>${escapeHtml(p[2])}</code></td>
+        <td>${escapeHtml(p[3])}</td></tr>`;
+      }).join("") +
+      `</tbody></table>`;
+  } else {
+    propsHtml = `<p class="hint">No props.</p>`;
+  }
+
+  // Whole-component live example (Ink UI): keyed by the bare component name.
+  const base = d.name.replace(/[<>()]/g, "").trim();
+  const compExample = EXAMPLES[base] ? `
+    <div class="comp-example">
+      <button class="ex-toggle" data-ex="${base}" aria-expanded="false">▶ live example</button>
+      <div class="comp-example-body" hidden></div>
+    </div>` : "";
+
+  card.innerHTML = `
+    <h2><code>${escapeHtml(d.name)}</code><span class="tag ${d.kind}">${d.kind}</span></h2>
+    <code class="sig">${escapeHtml(d.import)}</code>
+    <code class="sig">${escapeHtml(d.sig)}</code>
+    <p class="desc">${escapeHtml(d.desc)}</p>
+    ${compExample}
+    ${propsHtml}`;
+  cards.appendChild(card);
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c])); }
+
+// ── Live examples: snippet + rendered terminal output ──
+// Per-prop (Box/Text) examples expand as a table row; whole-component (Ink UI)
+// examples expand under a "▶ live example" button. Both share this markup.
+function exampleInner(ex) {
+  const output = ex.html
+    ? `<pre class="term">${ex.html}</pre>`
+    : `<pre class="term"><span class="note">${escapeHtml(ex.note || "▶ interactive — run it to see this.")}</span></pre>`;
+  const note = ex.html && ex.note ? `<span class="example-note">${escapeHtml(ex.note)}</span>` : "";
+  return `<div class="example-wrap">
+      <div class="example-col grow">
+        <span class="example-label">Snippet</span>
+        <pre class="example-snippet">${escapeHtml(ex.code)}</pre>
+      </div>
+      <div class="example-col">
+        <span class="example-label">Terminal output</span>
+        ${output}${note}
+      </div>
+    </div>`;
+}
+
+function collapseAllExamples() {
+  cards.querySelectorAll(".example-row").forEach(r => r.remove());
+  cards.querySelectorAll(".prop-row.open").forEach(r => r.classList.remove("open"));
+  cards.querySelectorAll(".ex-toggle.open").forEach(btn => {
+    btn.classList.remove("open"); btn.setAttribute("aria-expanded", "false");
+    const body = btn.nextElementSibling;
+    if (body) { body.hidden = true; body.innerHTML = ""; }
+  });
+}
+
+function toggleExample(cell) {                          // per-prop, expands a table row
+  const row = cell.closest(".prop-row");
+  const ex = EXAMPLES[cell.dataset.ex];
+  if (!row || !ex) return;
+  if (row.classList.contains("open")) {                 // already open → collapse
+    const next = row.nextElementSibling;
+    if (next && next.classList.contains("example-row")) next.remove();
+    row.classList.remove("open");
+    return;
+  }
+  const exRow = document.createElement("tr");
+  exRow.className = "example-row";
+  exRow.innerHTML = `<td colspan="4">${exampleInner(ex)}</td>`;
+  row.after(exRow);
+  row.classList.add("open");
+}
+
+function toggleCompExample(btn) {                        // whole-component, expands under the button
+  const ex = EXAMPLES[btn.dataset.ex];
+  const body = btn.nextElementSibling;
+  if (!ex || !body) return;
+  const open = btn.getAttribute("aria-expanded") === "true";
+  if (open) { body.hidden = true; body.innerHTML = ""; }
+  else { body.innerHTML = exampleInner(ex); body.hidden = false; }
+  btn.setAttribute("aria-expanded", String(!open));
+  btn.classList.toggle("open", !open);
+}
+
+cards.addEventListener("click", e => {
+  const btn = e.target.closest(".ex-toggle");
+  if (btn) { toggleCompExample(btn); return; }
+  const cell = e.target.closest(".prop-row.has-example td.name");
+  if (cell) toggleExample(cell);
+});
+cards.addEventListener("keydown", e => {                // <button> handles Enter/Space natively
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const cell = e.target.closest(".prop-row.has-example td.name");
+  if (!cell) return;
+  e.preventDefault();
+  toggleExample(cell);
+});
+
+// ── Live search ──
+const search = document.getElementById("search");
+const noResults = document.getElementById("noResults");
+const navLinks = [...nav.querySelectorAll("a")];
+const cardEls = [...cards.querySelectorAll(".card")];
+
+search.addEventListener("input", () => {
+  const q = search.value.trim().toLowerCase();
+  collapseAllExamples();   // avoid expansion rows orphaned next to filtered-out props
+  let visible = 0;
+  for (const card of cardEls) {
+    const rows = [...card.querySelectorAll(".prop-row")];
+    let cardMatch = !q || card.dataset.search.includes(q);
+    if (q && rows.length) {
+      let anyRow = false;
+      for (const r of rows) {
+        const m = r.dataset.p.includes(q);
+        r.classList.toggle("hidden", q && !cardMatch && !m);
+        if (m) anyRow = true;
+      }
+      cardMatch = cardMatch || anyRow;
+      if (cardMatch) rows.forEach(r => { if (card.dataset.search.includes(q)) r.classList.remove("hidden"); });
+    } else {
+      rows.forEach(r => r.classList.remove("hidden"));
+    }
+    card.classList.toggle("hidden", !cardMatch);
+    if (cardMatch) visible++;
+  }
+  for (const a of navLinks) a.classList.toggle("hidden", q && !a.dataset.key.includes(q) &&
+    !cardEls.find(c => c.id === a.getAttribute("href").slice(1) && !c.classList.contains("hidden")));
+  noResults.style.display = visible ? "none" : "block";
+});
+</script>
+</body>
+</html>

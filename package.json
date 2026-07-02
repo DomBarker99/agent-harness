@@ -1,18 +1,37 @@
 {
-  "name": "agent-harness",
+  "name": "agent-practice",
   "version": "0.1.0",
   "private": true,
   "description": "A minimal agent harness: an LLM in a loop with tools, against a local OpenAI-compatible model.",
   "type": "module",
   "scripts": {
     "start": "node --env-file-if-exists=.env src/agent.ts",
-    "typecheck": "tsc --noEmit"
+    "ink:hello": "tsx src/ink/hello.tsx",
+    "ink:counter": "tsx src/ink/counter.tsx",
+    "ink:prompt": "tsx src/ink/prompt.tsx",
+    "ink:play": "tsx src/ink/play.tsx",
+    "ink:list": "tsx src/ink/runningList.tsx",
+    "ink:fortune": "tsx src/ink/asyncFortune.tsx",
+    "ink:fact": "tsx src/ink/fact-generator.tsx",
+    "async-lab": "node src/async-lab.ts",
+    "gen:examples": "FORCE_COLOR=3 tsx src/gen-examples.tsx",
+    "docs": "open docs/ink-reference.html",
+    "docs:interactive": "open docs/ink-reference-interactive.html",
+    "typecheck": "tsc --noEmit",
+    "ts-practice": "tsc -p src/practice/ts-types",
+    "ts-practice:solutions": "tsc -p src/practice/ts-types/solutions"
   },
   "dependencies": {
-    "openai": "^6.42.0"
+    "@inkjs/ui": "^2.0.0",
+    "ink": "^7.1.0",
+    "ink-text-input": "^6.0.0",
+    "openai": "^6.42.0",
+    "react": "^19.2.7"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
 }

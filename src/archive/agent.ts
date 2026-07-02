@@ -7,6 +7,23 @@
 // Run with:  npm start            (uses the default task)
 //            npm start -- "..."   (your own task)
 // Node 25 executes this TypeScript directly -- there is no build step.
+//
+// Where to learn about the OpenAI API used below:
+//   - This file uses the official OpenAI Node/TypeScript SDK (the `openai` npm package).
+//     Source + README (quickstart, examples):  https://github.com/openai/openai-node
+//   - The `new OpenAI({ ... })` constructor (the `ClientOptions` it accepts -- apiKey,
+//     baseURL, organization, timeout, maxRetries, etc.) is defined in the SDK's types.
+//     Read them straight from the package:  node_modules/openai/client.d.ts  (the
+//     `ClientOptions` interface), or jump to the symbol in your editor. These types are
+//     the source of truth for what values each option can hold.
+//   - `client.chat.completions.create(...)` params/response (model, messages, tools,
+//     tool_calls, ...):  https://platform.openai.com/docs/api-reference/chat/create
+//   - Function/tool calling guide (how `tools` and `tool_calls` work end to end):
+//     https://platform.openai.com/docs/guides/function-calling
+//   - General API docs home:  https://platform.openai.com/docs
+//
+// Note: we point `baseURL` at a local, OpenAI-compatible server (see below), so not every
+//  field documented at platform.openai.com is necessarily supported by the local model.
 
 import OpenAI from "openai";
 import { execSync } from "node:child_process";
@@ -53,10 +70,13 @@ async function agent(task: string): Promise<string> {
     { role: "user", content: task },
   ];
 
+  // Note: Couldn't, this be replaced with a do while?
   while (true) {
-    const res = await client.chat.completions.create({ model: MODEL, messages, tools });
-    const msg = res.choices[0].message;
-    const toolCalls = msg.tool_calls;
+    // Send the list of messages and tools to the model
+    const res: OpenAI.Chat.ChatCompletion = await client.chat.completions.create({ model: MODEL, messages, tools });
+    //
+    const msg: OpenAI.Chat.ChatCompletionMessage = res.choices[0].message;
+    const toolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[] | undefined = msg.tool_calls;
 
     // No tool calls => the model is done. Return its answer.
     if (!toolCalls?.length) return msg.content ?? "";
@@ -65,15 +85,16 @@ async function agent(task: string): Promise<string> {
     messages.push({ role: "assistant", content: msg.content ?? "", tool_calls: toolCalls });
     for (const call of toolCalls) {
       if (call.type !== "function") continue; // we only define function tools
-      const args = JSON.parse(call.function.arguments);
-      const result = execute(call.function.name, args);
+      // Note : What does this return?
+      const args: any = JSON.parse(call.function.arguments);
+      const result: string = execute(call.function.name, args);
       messages.push({ role: "tool", tool_call_id: call.id, content: result });
     }
     // loop: the model now sees the results and decides the next step.
   }
 }
 
-const task =
+const task: string =
   process.argv.slice(2).join(" ") ||
   "List the files in the current directory, then tell me which is largest.";
 

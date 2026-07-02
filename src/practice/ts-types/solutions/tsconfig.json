@@ -1,0 +1,15 @@
+{
+  // The answer key. This one should ALWAYS be green:
+  //
+  //   Run:  npm run ts-practice:solutions
+  //
+  // Use it to confirm a finished exercise matches a known-good version, or if you
+  // ever suspect the grader itself is wrong.
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["*.ts"],
+  // clear the root's "exclude": ["src/practice"] so this project sees its own files
+  "exclude": []
+}

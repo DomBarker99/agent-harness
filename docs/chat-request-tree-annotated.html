@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>chat.completions.create — request shape (annotated)</title>
+<script>
+  // Set theme before paint to avoid flash. (file:// may block storage — guard it.)
+  try { var t = localStorage.getItem('crt-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+<style>
+  :root {
+    --bg:#efede7; --surface:#fbfbf8;
+    --ink:#26241f; --key:#2a2823; --type:#524d44; --muted:#6c675c; --faint:#837c6b;
+    --guide:rgba(38,36,31,.13); --border:rgba(38,36,31,.16); --row-hover:rgba(38,36,31,.035);
+    --warm:#a4501f; --green:#436a41;
+    --badge-req-bg:rgba(176,89,47,.12); --badge-req-fg:#a3501f;
+    --chip-bg:rgba(38,36,31,.07); --chip-fg:#5c584e;
+    --variant-bg:rgba(78,122,81,.055);
+    --desc-bg:rgba(176,89,47,.05); --desc-fg:#5f5a50;
+    --mark-bg:#f3dd8e; --mark-fg:#3a3320;
+    --toolbar-bg:rgba(251,251,248,.93);
+    --on-warm:#fff;
+  }
+  html[data-theme="dark"] {
+    --bg:#1a1916; --surface:#201f1b;
+    --ink:#e7e3d8; --key:#e9e5da; --type:#a39e8f; --muted:#8f8a7e; --faint:#6a665c;
+    --guide:rgba(231,227,216,.10); --border:rgba(231,227,216,.13); --row-hover:rgba(231,227,216,.045);
+    --warm:#d98a5c; --green:#86b386;
+    --badge-req-bg:rgba(217,138,92,.16); --badge-req-fg:#e09a6e;
+    --chip-bg:rgba(231,227,216,.08); --chip-fg:#c3bdad;
+    --variant-bg:rgba(134,179,134,.08);
+    --desc-bg:rgba(217,138,92,.08); --desc-fg:#b8b2a4;
+    --mark-bg:#6d5d2a; --mark-fg:#fff3cf;
+    --toolbar-bg:rgba(32,31,27,.93);
+    --on-warm:#1a1916;
+  }
+
+  * { box-sizing:border-box; }
+  html, body { margin:0; }
+  body {
+    background:var(--bg); color:var(--ink);
+    font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    font-size:13px; line-height:1.55;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+
+  .wrap { max-width:1120px; margin:0 auto; padding:0 22px 80px; }
+
+  /* ---- Sticky header ---- */
+  header {
+    position:sticky; top:0; z-index:10;
+    background:var(--toolbar-bg); backdrop-filter:saturate(1.4) blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .hbar { max-width:1120px; margin:0 auto; padding:12px 22px; }
+  .titlerow { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .title { font-weight:700; font-size:15px; letter-spacing:-.01em; color:var(--ink); }
+  .title .dot { color:var(--warm); }
+  .subtitle { color:var(--muted); font-size:12.5px; }
+  .grow { flex:1 1 auto; }
+  .pill {
+    font-size:11px; color:var(--muted);
+    border:1px solid var(--border); border-radius:999px; padding:2px 9px;
+  }
+  .iconbtn {
+    font-family:inherit; font-size:13px; line-height:1;
+    background:transparent; color:var(--muted);
+    border:1px solid var(--border); border-radius:7px;
+    padding:6px 9px; cursor:pointer;
+  }
+  .iconbtn:hover { color:var(--ink); border-color:var(--faint); }
+
+  .toolbar { display:flex; align-items:center; gap:9px; margin-top:11px; flex-wrap:wrap; }
+  .search {
+    flex:1 1 280px; display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:0 10px; min-height:34px;
+  }
+  .search:focus-within { border-color:var(--warm); }
+  .search .mag { color:var(--faint); font-size:13px; }
+  .search input {
+    flex:1; border:0; outline:0; background:transparent; color:var(--ink);
+    font-family:inherit; font-size:13px; padding:7px 0;
+  }
+  .search input::placeholder { color:var(--faint); }
+  .search .count { color:var(--muted); font-size:11px; white-space:nowrap; }
+  .search kbd {
+    font-family:inherit; font-size:10.5px; color:var(--muted);
+    border:1px solid var(--border); border-bottom-width:2px; border-radius:4px;
+    padding:1px 5px; background:var(--surface);
+  }
+  .btn {
+    font-family:inherit; font-size:12px; color:var(--ink);
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:7px 12px; cursor:pointer; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn:hover { border-color:var(--faint); }
+  .btn:active { transform:translateY(.5px); }
+  .btn.active { background:var(--warm); color:var(--on-warm); border-color:var(--warm); }
+  .btn.active .gi { border-color:var(--on-warm); color:var(--on-warm); }
+
+  .legend { display:flex; gap:16px; flex-wrap:wrap; align-items:center; color:var(--muted); font-size:11px; margin-top:10px; }
+  .legend .swatch { display:inline-flex; align-items:center; gap:6px; }
+  .legend .b { font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:5px; }
+
+  /* glyph: circled italic i (info) */
+  .gi {
+    flex:none; display:inline-flex; align-items:center; justify-content:center;
+    width:15px; height:15px; border-radius:50%;
+    border:1px solid var(--border); color:var(--muted);
+    font-family:Georgia,"Times New Roman",serif; font-style:italic; font-weight:700;
+    font-size:10px; line-height:1; user-select:none;
+  }
+
+  /* ---- Tree ---- */
+  .tree { margin-top:22px; }
+
+  .node { }
+  .row {
+    display:flex; align-items:baseline; gap:9px;
+    padding:2.5px 8px 2.5px 4px; border-radius:6px;
+  }
+  .row.clk { cursor:pointer; }
+  .row.clk:hover { background:var(--row-hover); }
+
+  .tw {
+    flex:none; width:1.1em; text-align:center; color:var(--faint);
+    font-size:10px; user-select:none; transform:translateY(-1px);
+  }
+  .tw.leaf { color:transparent; }
+
+  .label { flex:1 1 auto; min-width:0; }
+  .key { color:var(--key); font-weight:600; }
+  .q { color:var(--faint); font-weight:600; }
+  .colon { color:var(--faint); }
+  .type { color:var(--type); white-space:pre-wrap; overflow-wrap:anywhere; }
+
+  .meta { flex:none; display:flex; align-items:baseline; gap:9px; }
+  .info {
+    flex:none; display:inline-flex; align-items:center; justify-content:center;
+    width:15px; height:15px; border-radius:50%;
+    border:1px solid var(--border); color:var(--muted);
+    font-family:Georgia,"Times New Roman",serif; font-style:italic; font-weight:700;
+    font-size:10px; line-height:1; cursor:pointer; user-select:none;
+    transform:translateY(1px);
+  }
+  .info:hover { color:var(--warm); border-color:var(--warm); }
+  .info.on { color:var(--on-warm); background:var(--warm); border-color:var(--warm); }
+  .doc {
+    color:var(--faint); text-decoration:none; font-size:12px;
+    border-radius:5px; padding:0 2px; transform:translateY(-1px);
+  }
+  .doc:hover { color:var(--warm); }
+  .badge {
+    font-size:9.5px; letter-spacing:.06em; text-transform:uppercase;
+    padding:1.5px 7px; border-radius:5px; white-space:nowrap;
+  }
+  .badge.req { color:var(--badge-req-fg); background:var(--badge-req-bg); font-weight:700; }
+  .badge.opt { color:var(--muted); background:transparent; border:1px solid var(--border); }
+
+  /* description panel */
+  .desc, .vdesc {
+    display:none; margin:2px 0 7px 1.85em; max-width:660px;
+    padding:7px 12px; border-left:2px solid var(--warm); border-radius:0 6px 6px 0;
+    background:var(--desc-bg); color:var(--desc-fg); font-size:12px; line-height:1.55;
+  }
+  .node.desc-open > .desc { display:block; }
+  .variant.desc-open > .vdesc { display:block; }
+
+  /* nesting + guides */
+  .body { display:none; margin-left:9px; padding-left:13px; border-left:1px solid var(--guide); }
+  .node.expanded > .body { display:block; }
+
+  .zone { margin:3px 0 5px; }
+  .zonelabel {
+    font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    padding:5px 0 3px 6px;
+  }
+
+  .variant { margin:2px 0; }
+  .vrow {
+    display:flex; align-items:baseline; gap:9px;
+    background:var(--variant-bg); border-radius:7px;
+    padding:3px 9px 3px 5px;
+  }
+  .vrow.clk { cursor:pointer; }
+  .vrow.clk:hover { filter:brightness(.985); }
+  html[data-theme="dark"] .vrow.clk:hover { filter:brightness(1.15); }
+  .vlabel {
+    flex:none; font-size:10.5px; color:var(--chip-fg); background:var(--chip-bg);
+    padding:1px 8px; border-radius:999px;
+  }
+  .vdisc { flex:1 1 auto; min-width:0; color:var(--green); white-space:pre-wrap; overflow-wrap:anywhere; }
+  .vmeta { flex:none; display:flex; align-items:baseline; gap:9px; }
+  .vbody { display:none; margin-left:9px; padding-left:13px; border-left:1px solid var(--guide); }
+  .variant.expanded > .vbody { display:block; }
+
+  mark { background:var(--mark-bg); color:var(--mark-fg); border-radius:2px; padding:0 1px; }
+
+  .hidden { display:none !important; }
+
+  .noresults { display:none; color:var(--muted); padding:34px 8px; font-size:13px; }
+  .noresults.on { display:block; }
+  .noresults code { color:var(--ink); }
+
+  footer { margin-top:42px; color:var(--faint); font-size:11px; border-top:1px solid var(--border); padding-top:14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <div class="titlerow">
+      <span class="title">chat.completions<span class="dot">.</span>create</span>
+      <span class="subtitle">request shape — annotated type tree</span>
+      <span class="grow"></span>
+      <span class="pill">openai@6.42.0</span>
+      <button class="iconbtn" id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">☾</button>
+    </div>
+    <div class="toolbar">
+      <label class="search">
+        <span class="mag" aria-hidden="true">⌕</span>
+        <input id="search" type="text" placeholder="Filter by key, type, or description…  (e.g. tool)" autocomplete="off" spellcheck="false" aria-label="Filter fields">
+        <span class="count" id="count"></span>
+        <kbd>/</kbd>
+      </label>
+      <button class="btn" id="descBtn" aria-pressed="false" title="Show every field's description"><span class="gi" aria-hidden="true">i</span>Descriptions</button>
+      <button class="btn" id="expandAll">Expand all</button>
+      <button class="btn" id="collapseAll">Collapse all</button>
+    </div>
+    <div class="legend">
+      <span class="swatch"><span class="b badge req">required</span> no <code>?</code></span>
+      <span class="swatch"><span class="b badge opt">optional</span> has <code>?</code></span>
+      <span class="swatch"><span class="gi" aria-hidden="true">i</span>&nbsp;<span>what it does</span></span>
+      <span class="swatch" style="color:var(--green)">role: "…"&nbsp;<span style="color:var(--muted)">discriminant</span></span>
+      <span class="swatch"><span style="color:var(--faint)">↗</span>&nbsp;<span>SDK docs</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tree" id="tree"></div>
+  <div class="noresults" id="noresults">No field’s key, type, or description matches <code id="nrq"></code>.</div>
+  <footer>
+    Generated from <code>openai@6.42.0</code> · <code>ChatCompletionCreateParams</code>. Descriptions summarize each field's purpose — see the <code>↗</code> links for the authoritative SDK reference.
+  </footer>
+</div>
+
+<script>
+/* ===========================================================================
+   DATA — source of truth (openai@6.42.0). Hand-edit this object on SDK bumps.
+   Schema:
+     Node = { key, type, required, kind:"leaf"|"object"|"array"|"union",
+              desc?,                 // one-line "what it does / role it plays"
+              docAnchor?, children?, item?, common?,
+              variants?: { label, discriminant, desc?, fields:Node[] }[] }
+   =========================================================================== */
+const REQUEST_TREE = {
+  key: "ChatCompletionCreateParams", type: "ChatCompletionCreateParamsBase + stream split",
+  required: true, kind: "union", docAnchor: "",
+  desc: "Every parameter accepted by chat.completions.create. The type splits into a non-streaming and a streaming variant depending on the stream flag.",
+  common: [
+    { key: "messages", type: "Array<ChatCompletionMessageParam>", required: true, kind: "array",
+      docAnchor: "chat-create-messages",
+      desc: "The conversation the model continues. An ordered array — the model reads it top to bottom and produces the next assistant message.",
+      item: {
+        key: "(element)", type: "ChatCompletionMessageParam", required: true, kind: "union",
+        desc: "One message in the conversation. Which fields are valid depends on its role.",
+        common: [
+          { key: "role", type: '"system" | "developer" | "user" | "assistant" | "tool" | "function"', required: true, kind: "leaf",
+            desc: "Who authored the message. Selects the variant below and governs which other fields are allowed." },
+          { key: "name", type: "string", required: false, kind: "leaf",
+            desc: "Optional name to distinguish multiple participants that share the same role." }
+        ],
+        variants: [
+          { label: "system", discriminant: 'role: "system"',
+            desc: "Steers overall behavior and the rules the assistant should follow across the whole conversation.",
+            fields: [
+            { key: "content", type: "string | Array<ChatCompletionContentPartText>", required: true, kind: "leaf",
+              desc: "The instruction text, as a plain string or an array of text parts." }
+          ]},
+          { label: "developer", discriminant: 'role: "developer"',
+            desc: "Newer replacement for system on o-series / GPT-4.1+ models; outranks user instructions.",
+            fields: [
+            { key: "content", type: "string | Array<ChatCompletionContentPartText>", required: true, kind: "leaf",
+              desc: "The instruction text, as a plain string or an array of text parts." }
+          ]},
+          { label: "user", discriminant: 'role: "user"',
+            desc: "An end-user turn: the prompt, question, or data the model should respond to.",
+            fields: [
+            { key: "content", type: "string | Array<ChatCompletionContentPart>", required: true, kind: "union",
+              desc: "The user input — either a string, or an array of parts that mix text with images, audio, and files.",
+              common: [],
+              variants: [
+                { label: "text", discriminant: 'type: "text"', desc: "A plain-text portion of multimodal content.", fields: [
+                  { key: "text", type: "string", required: true, kind: "leaf", desc: "The literal text of this part." } ]},
+                { label: "image_url", discriminant: 'type: "image_url"', desc: "An image input. detail trades vision resolution against token cost.", fields: [
+                  { key: "image_url", type: "{ url: string; detail?: \"auto\"|\"low\"|\"high\" }", required: true, kind: "leaf",
+                    desc: "The image source (an https URL or a data: URI) plus an optional detail level." } ]},
+                { label: "input_audio", discriminant: 'type: "input_audio"', desc: "An inline audio clip supplied as base64 data.", fields: [
+                  { key: "input_audio", type: "{ data: string; format: \"wav\"|\"mp3\" }", required: true, kind: "leaf",
+                    desc: "Base64 audio bytes and their container format." } ]},
+                { label: "file", discriminant: 'type: "file"', desc: "A file input, referenced by id or provided inline.", fields: [
+                  { key: "file", type: "{ file_id?: string; file_data?: string; filename?: string }", required: true, kind: "leaf",
+                    desc: "Either an uploaded file_id, or inline file_data with a filename." } ]}
+              ]}
+          ]},
+          { label: "assistant", discriminant: 'role: "assistant"',
+            desc: "A previous model reply. Include past assistant turns to keep context, or to carry tool calls the model made.",
+            fields: [
+            { key: "content", type: "string | Array<ChatCompletionContentPartText | ChatCompletionContentPartRefusal> | null", required: false, kind: "leaf",
+              desc: "The reply text. May be null when the turn only carries tool calls or a refusal." },
+            { key: "refusal", type: "string | null", required: false, kind: "leaf",
+              desc: "The refusal message when the model declined to answer." },
+            { key: "tool_calls", type: "Array<ChatCompletionMessageToolCall>", required: false, kind: "array",
+              desc: "Tool/function calls the model wants run. Your code executes them and returns results as tool messages.",
+              item: {
+                key: "(element)", type: "ChatCompletionMessageToolCall", required: true, kind: "union",
+                desc: "A single requested tool call, identified by id.",
+                common: [ { key: "id", type: "string", required: true, kind: "leaf",
+                  desc: "Unique id for this call. Echo it in the matching tool message's tool_call_id." } ],
+                variants: [
+                  { label: "function", discriminant: 'type: "function"', desc: "A function call: a name plus a JSON string of arguments.", fields: [
+                    { key: "function", type: "{ name: string; arguments: string }", required: true, kind: "leaf",
+                      desc: "The function to invoke and its arguments, serialized as a JSON string." } ]},
+                  { label: "custom", discriminant: 'type: "custom"', desc: "A custom tool invocation carrying raw input text.", fields: [
+                    { key: "custom", type: "{ name: string; input: string }", required: true, kind: "leaf",
+                      desc: "The custom tool's name and freeform input." } ]}
+                ]}
+            },
+            { key: "audio", type: "{ id: string } | null", required: false, kind: "leaf",
+              desc: "Reference to audio the assistant produced in an earlier turn." }
+          ]},
+          { label: "tool", discriminant: 'role: "tool"',
+            desc: "Returns the output of a tool call back to the model so it can continue.",
+            fields: [
+            { key: "content", type: "string | Array<ChatCompletionContentPartText>", required: true, kind: "leaf",
+              desc: "The tool's result, as text, fed back to the model." },
+            { key: "tool_call_id", type: "string", required: true, kind: "leaf",
+              desc: "Which assistant tool call this message is answering." }
+          ]},
+          { label: "function (deprecated)", discriminant: 'role: "function"',
+            desc: "Legacy function-result message. Superseded by the tool role.",
+            fields: [
+            { key: "content", type: "string | null", required: true, kind: "leaf",
+              desc: "The function's return value as a string." },
+            { key: "name", type: "string", required: true, kind: "leaf",
+              desc: "Name of the function that produced this result." }
+          ]}
+        ]
+      }
+    },
+    { key: "model", type: "(string & {}) | Shared.ChatModel", required: true, kind: "leaf", docAnchor: "chat-create-model",
+      desc: "Which model runs the request, e.g. gpt-4o or o3." },
+
+    { key: "tools", type: "Array<ChatCompletionTool>", required: false, kind: "array", docAnchor: "chat-create-tools",
+      desc: "Tools the model is allowed to call — usually functions you define. The model decides whether and which to use.",
+      item: {
+        key: "(element)", type: "ChatCompletionTool", required: true, kind: "union",
+        desc: "One tool definition the model may call.",
+        common: [],
+        variants: [
+          { label: "function", discriminant: 'type: "function"',
+            desc: "A function tool: a name, a description, and a JSON-Schema for its arguments.",
+            fields: [
+            { key: "function", type: "Shared.FunctionDefinition", required: true, kind: "object",
+              desc: "The function's signature the model calls against.",
+              children: [
+                { key: "name", type: "string", required: true, kind: "leaf",
+                  desc: "Identifier the model uses when it calls the function." },
+                { key: "description", type: "string", required: false, kind: "leaf",
+                  desc: "Plain-language summary of what the function does — guides when the model calls it." },
+                { key: "parameters", type: "{ [key: string]: unknown }  // JSON Schema", required: false, kind: "leaf",
+                  desc: "JSON Schema describing the function's accepted arguments." },
+                { key: "strict", type: "boolean | null", required: false, kind: "leaf",
+                  desc: "When true, forces the model's arguments to strictly match the schema." }
+              ]}
+          ]},
+          { label: "custom", discriminant: 'type: "custom"',
+            desc: "A custom tool whose input is plain text or constrained by a grammar.",
+            fields: [
+            { key: "custom", type: "{ name: string; description?: string; format?: text|grammar }", required: true, kind: "leaf",
+              desc: "The custom tool's name, optional description, and input format." }
+          ]}
+        ]
+      }
+    },
+    { key: "tool_choice", type: '"none" | "auto" | "required" | NamedToolChoice | AllowedToolChoice', required: false, kind: "union",
+      docAnchor: "chat-create-tool_choice",
+      desc: "Controls tool use: a mode string, or an object forcing one specific tool.",
+      common: [],
+      variants: [
+        { label: "string", discriminant: '"none" | "auto" | "required"',
+          desc: "none = never call a tool, auto = the model decides, required = it must call some tool.", fields: [] },
+        { label: "named function", discriminant: 'type: "function"',
+          desc: "Require the model to call this one named function.", fields: [
+          { key: "function", type: "{ name: string }", required: true, kind: "leaf",
+            desc: "The function the model is forced to call." } ]}
+      ]
+    },
+    { key: "parallel_tool_calls", type: "boolean", required: false, kind: "leaf", docAnchor: "chat-create-parallel_tool_calls",
+      desc: "Allow several tool calls to be requested in a single assistant turn." },
+
+    { key: "response_format", type: "ResponseFormatText | ResponseFormatJSONObject | ResponseFormatJSONSchema", required: false, kind: "union",
+      docAnchor: "chat-create-response_format",
+      desc: "Shapes the output: free text, any JSON object, or JSON matching a schema.",
+      common: [],
+      variants: [
+        { label: "text", discriminant: 'type: "text"', desc: "Default — ordinary unstructured text.", fields: [] },
+        { label: "json_object", discriminant: 'type: "json_object"',
+          desc: "Guarantees syntactically valid JSON. You must also instruct the model to produce JSON.", fields: [] },
+        { label: "json_schema", discriminant: 'type: "json_schema"',
+          desc: "Structured Outputs — the reply conforms to the JSON Schema you supply.", fields: [
+          { key: "json_schema", type: "{ name: string; schema?: object; strict?: boolean|null; description?: string }", required: true, kind: "leaf",
+            desc: "The schema, with a name and an optional strict flag." } ]}
+      ]
+    },
+
+    { key: "temperature", type: "number | null", required: false, kind: "leaf", docAnchor: "chat-create-temperature",
+      desc: "Sampling randomness, 0–2. Higher is more varied, lower more focused. Tune this or top_p, not both." },
+    { key: "top_p", type: "number | null", required: false, kind: "leaf", docAnchor: "chat-create-top_p",
+      desc: "Nucleus sampling: only consider tokens within the top p probability mass. An alternative to temperature." },
+    { key: "max_completion_tokens", type: "number | null", required: false, kind: "leaf", docAnchor: "chat-create-max_completion_tokens",
+      desc: "Hard cap on tokens generated, counting both visible output and reasoning tokens." },
+    { key: "frequency_penalty", type: "number | null", required: false, kind: "leaf", docAnchor: "chat-create-frequency_penalty",
+      desc: "-2 to 2. Discourages tokens in proportion to how often they've already appeared." },
+    { key: "presence_penalty", type: "number | null", required: false, kind: "leaf", docAnchor: "chat-create-presence_penalty",
+      desc: "-2 to 2. Discourages any token that has already appeared, nudging toward new topics." },
+    { key: "stop", type: "string | null | Array<string>", required: false, kind: "leaf", docAnchor: "chat-create-stop",
+      desc: "Up to four strings that halt generation when produced; the stop string itself is omitted." },
+    { key: "n", type: "number | null", required: false, kind: "leaf", docAnchor: "chat-create-n",
+      desc: "Number of independent completions to generate for the same prompt." },
+    { key: "seed", type: "number | null", required: false, kind: "leaf", docAnchor: "chat-create-seed",
+      desc: "Best-effort reproducibility: the same seed and parameters aim to yield the same output." },
+    { key: "stream_options", type: "{ include_usage?: boolean } | null", required: false, kind: "leaf", docAnchor: "chat-create-stream_options",
+      desc: "Streaming-only settings, such as appending a final token-usage summary." },
+    { key: "reasoning_effort", type: '"none"|"minimal"|"low"|"medium"|"high"|"xhigh" | null', required: false, kind: "leaf", docAnchor: "chat-create-reasoning_effort",
+      desc: "Reasoning models only — how much internal thinking to spend before answering." },
+    { key: "verbosity", type: '"low" | "medium" | "high" | null', required: false, kind: "leaf",
+      desc: "Hints how terse or expansive the answer should be." },
+    { key: "logprobs", type: "boolean | null", required: false, kind: "leaf", docAnchor: "chat-create-logprobs",
+      desc: "Return log-probabilities for the output tokens." },
+    { key: "top_logprobs", type: "number | null", required: false, kind: "leaf", docAnchor: "chat-create-top_logprobs",
+      desc: "How many top alternatives to report per position. Requires logprobs." },
+    { key: "logit_bias", type: "{ [key: string]: number } | null", required: false, kind: "leaf", docAnchor: "chat-create-logit_bias",
+      desc: "Map from token id to a bias from -100 to 100, to discourage or force specific tokens." },
+    { key: "metadata", type: "{ [key: string]: string } | null", required: false, kind: "leaf", docAnchor: "chat-create-metadata",
+      desc: "Up to 16 string key/value pairs you attach for your own tracking." },
+    { key: "store", type: "boolean | null", required: false, kind: "leaf", docAnchor: "chat-create-store",
+      desc: "Whether to retain the completion server-side for later retrieval, evals, or distillation." },
+
+    { key: "Other optional params", type: "audio, modalities, prediction, moderation, web_search_options, service_tier, prompt_cache_key, safety_identifier, user(dep), functions(dep), function_call(dep)",
+      required: false, kind: "object",
+      desc: "Rarely-needed and deprecated parameters, grouped to keep the primary list scannable.",
+      children: [
+        { key: "user", type: "string  // deprecated", required: false, kind: "leaf",
+          desc: "Deprecated stable end-user identifier for abuse monitoring. Use safety_identifier instead." },
+        { key: "functions", type: "Array<…>  // deprecated → tools", required: false, kind: "leaf",
+          desc: "Deprecated. Superseded by tools." },
+        { key: "function_call", type: '"none"|"auto"|{name}  // deprecated → tool_choice', required: false, kind: "leaf",
+          desc: "Deprecated. Superseded by tool_choice." },
+        { key: "modalities", type: 'Array<"text"|"audio"> | null', required: false, kind: "leaf",
+          desc: "Output types to generate, e.g. text and/or audio." },
+        { key: "audio", type: "ChatCompletionAudioParam | null", required: false, kind: "leaf",
+          desc: "Voice and format settings when audio output is enabled." },
+        { key: "prediction", type: "ChatCompletionPredictionContent | null", required: false, kind: "leaf",
+          desc: "Predicted content to accelerate responses when much of the output is known in advance." },
+        { key: "service_tier", type: '"auto"|"default"|"flex"|"scale"|"priority" | null', required: false, kind: "leaf",
+          desc: "Processing tier governing latency and throughput." },
+        { key: "web_search_options", type: "{ search_context_size?; user_location? }", required: false, kind: "leaf",
+          desc: "Settings for the model's built-in web search." }
+      ]
+    }
+  ],
+  variants: [
+    { label: "NonStreaming", discriminant: "stream?: false | null",
+      desc: "Returns a single, complete response object. stream is false, null, or omitted.",
+      fields: [
+      { key: "stream", type: "false | null", required: false, kind: "leaf", docAnchor: "chat-create-stream",
+        desc: "Leave false/null (or omit) to get one full response." } ]},
+    { label: "Streaming", discriminant: "stream: true",
+      desc: "Streams partial deltas as server-sent events. stream must be true.",
+      fields: [
+      { key: "stream", type: "true", required: true, kind: "leaf", docAnchor: "chat-create-stream",
+        desc: "Set true to receive tokens incrementally as they're generated." } ]}
+  ]
+};
+
+/* ===========================================================================
+   RENDER
+   =========================================================================== */
+const DOC_BASE = "https://platform.openai.com/docs/api-reference/chat/create#";
+const records = [];          // every rendered line (node or variant header)
+const zones = [];            // zone wrappers (common to all / variants)
+
+function el(tag, cls, txt) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = txt;
+  return e;
+}
+
+function nodeHasBody(n) {
+  if (n.kind === "object") return !!(n.children && n.children.length);
+  if (n.kind === "array")  return !!n.item;
+  if (n.kind === "union")  return !!((n.common && n.common.length) || (n.variants && n.variants.length));
+  return false;
+}
+
+function infoButton(rec) {
+  const b = el("span", "info", "i");
+  b.setAttribute("role", "button");
+  b.setAttribute("tabindex", "0");
+  b.setAttribute("aria-label", "What this does");
+  b.title = "What this does";
+  b.addEventListener("click", e => { e.stopPropagation(); toggleInfo(rec); });
+  b.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleInfo(rec); }
+  });
+  return b;
+}
+
+// Build one normal node -> { el, rec }
+function buildNode(node, path, parentRec) {
+  const wrap = el("div", "node");
+  const row  = el("div", "row");
+  wrap.appendChild(row);
+
+  const hasBody = nodeHasBody(node);
+  const tw = el("span", "tw" + (hasBody ? "" : " leaf"), "▸");
+  row.appendChild(tw);
+
+  const label = el("span", "label");
+  const keyEl = el("span", "key", node.key);
+  label.appendChild(keyEl);
+  if (!node.required) label.appendChild(el("span", "q", "?"));
+  label.appendChild(el("span", "colon", " : "));
+  const typeEl = el("span", "type", node.type);
+  label.appendChild(typeEl);
+  row.appendChild(label);
+
+  const rec = {
+    type: "node", el: wrap, row, tw, keyEl, typeEl,
+    keyText: node.key, typeText: node.type,
+    descText: node.desc || "", descEl: null, infoBtn: null,
+    hasBody, expanded: false, parent: parentRec, path
+  };
+
+  const meta = el("span", "meta");
+  if (node.desc) { rec.infoBtn = infoButton(rec); meta.appendChild(rec.infoBtn); }
+  if (node.docAnchor) {
+    const a = el("a", "doc", "↗");
+    a.href = DOC_BASE + node.docAnchor;
+    a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.title = "Open SDK docs ↗";
+    a.addEventListener("click", e => e.stopPropagation());
+    meta.appendChild(a);
+  }
+  meta.appendChild(el("span", "badge " + (node.required ? "req" : "opt"), node.required ? "required" : "optional"));
+  row.appendChild(meta);
+
+  records.push(rec);
+
+  if (node.desc) {
+    const d = el("div", "desc");
+    rec.descEl = el("span", "desctext", node.desc);
+    d.appendChild(rec.descEl);
+    wrap.appendChild(d);
+  }
+
+  if (hasBody) {
+    row.classList.add("clk");
+    row.addEventListener("click", () => toggle(rec));
+    const body = el("div", "body");
+    wrap.appendChild(body);
+    if (node.kind === "object") {
+      node.children.forEach(c => body.appendChild(buildNode(c, path + "/" + c.key, rec).el));
+    } else if (node.kind === "array") {
+      body.appendChild(buildNode(node.item, path + "/" + node.item.key, rec).el);
+    } else if (node.kind === "union") {
+      buildUnion(node, body, path, rec);
+    }
+  }
+  return { el: wrap, rec };
+}
+
+function buildUnion(node, body, path, unionRec) {
+  const common = node.common || [], variants = node.variants || [];
+  if (common.length) {
+    const z = el("div", "zone");
+    z.appendChild(el("div", "zonelabel", "common to all"));
+    common.forEach(c => z.appendChild(buildNode(c, path + "/" + c.key, unionRec).el));
+    body.appendChild(z); zones.push(z);
+  }
+  if (variants.length) {
+    const z = el("div", "zone");
+    z.appendChild(el("div", "zonelabel", "variants"));
+    variants.forEach(v => z.appendChild(buildVariant(v, path + "::" + v.label, unionRec)));
+    body.appendChild(z); zones.push(z);
+  }
+}
+
+function buildVariant(v, path, parentRec) {
+  const wrap = el("div", "variant");
+  const vrow = el("div", "vrow");
+  wrap.appendChild(vrow);
+
+  const hasBody = !!(v.fields && v.fields.length);
+  vrow.appendChild(el("span", "tw" + (hasBody ? "" : " leaf"), "▸"));
+  const labelEl = el("span", "vlabel", v.label);
+  const discEl  = el("span", "vdisc", v.discriminant);
+  vrow.appendChild(labelEl);
+  vrow.appendChild(discEl);
+
+  const rec = {
+    type: "variant", el: wrap, row: vrow, tw: vrow.firstChild,
+    labelEl, discEl, labelText: v.label, discText: v.discriminant,
+    descText: v.desc || "", descEl: null, infoBtn: null,
+    hasBody, expanded: false, parent: parentRec, path
+  };
+
+  const vmeta = el("span", "vmeta");
+  if (v.desc) { rec.infoBtn = infoButton(rec); vmeta.appendChild(rec.infoBtn); }
+  vrow.appendChild(vmeta);
+
+  records.push(rec);
+
+  if (v.desc) {
+    const d = el("div", "vdesc");
+    rec.descEl = el("span", "desctext", v.desc);
+    d.appendChild(rec.descEl);
+    wrap.appendChild(d);
+  }
+
+  if (hasBody) {
+    vrow.classList.add("clk");
+    vrow.addEventListener("click", () => toggle(rec));
+    const vbody = el("div", "vbody");
+    wrap.appendChild(vbody);
+    v.fields.forEach(f => vbody.appendChild(buildNode(f, path + "/" + f.key, rec).el));
+  }
+  return wrap;
+}
+
+function setExpanded(rec, val) {
+  rec.expanded = val;
+  rec.el.classList.toggle("expanded", val);
+  if (rec.hasBody) rec.tw.textContent = val ? "▾" : "▸";
+}
+function toggle(rec) { setExpanded(rec, !rec.expanded); }
+
+function setInfo(rec, on) {
+  rec.el.classList.toggle("desc-open", on);
+  if (rec.infoBtn) rec.infoBtn.classList.toggle("on", on);
+}
+function toggleInfo(rec) { setInfo(rec, !rec.el.classList.contains("desc-open")); }
+
+/* ---- highlight ---- */
+function plain(rec) {
+  if (rec.type === "variant") { rec.labelEl.textContent = rec.labelText; rec.discEl.textContent = rec.discText; }
+  else { rec.keyEl.textContent = rec.keyText; rec.typeEl.textContent = rec.typeText; }
+  if (rec.descEl) rec.descEl.textContent = rec.descText;
+}
+function highlight(elm, text, q) {
+  const low = text.toLowerCase(), frag = document.createDocumentFragment();
+  let last = 0, idx;
+  while ((idx = low.indexOf(q, last)) !== -1) {
+    if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
+    frag.appendChild(el("mark", null, text.slice(idx, idx + q.length)));
+    last = idx + q.length;
+  }
+  if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  elm.textContent = ""; elm.appendChild(frag);
+}
+
+/* ---- default state ---- */
+const ROOT = REQUEST_TREE.key;
+const DEFAULT_EXPANDED = new Set([
+  ROOT,
+  ROOT + "/messages",
+  ROOT + "/messages/(element)"
+]);
+function closeAllInfo() {
+  records.forEach(rec => setInfo(rec, false));
+  allDesc = false; descBtn.classList.remove("active"); descBtn.setAttribute("aria-pressed", "false");
+}
+function resetToDefault() {
+  records.forEach(rec => {
+    rec.el.classList.remove("hidden");
+    plain(rec);
+    setExpanded(rec, rec.hasBody && DEFAULT_EXPANDED.has(rec.path));
+    setInfo(rec, false);
+  });
+  zones.forEach(z => z.classList.remove("hidden"));
+  allDesc = false; descBtn.classList.remove("active"); descBtn.setAttribute("aria-pressed", "false");
+  showNoResults(false, "");
+}
+
+/* ---- search ---- */
+function applySearch(raw) {
+  const q = (raw || "").trim().toLowerCase();
+  if (!q) { resetToDefault(); setCount(""); return; }
+
+  allDesc = false; descBtn.classList.remove("active"); descBtn.setAttribute("aria-pressed", "false");
+
+  const matched = [];
+  records.forEach(rec => {
+    const head = (rec.type === "variant" ? rec.labelText + " " + rec.discText : rec.keyText + " " + rec.typeText).toLowerCase();
+    rec.matchHead = head.includes(q);
+    rec.matchDesc = !!rec.descText && rec.descText.toLowerCase().includes(q);
+    rec.match = rec.matchHead || rec.matchDesc;
+    if (rec.match) matched.push(rec);
+  });
+
+  if (!matched.length) {
+    records.forEach(rec => { rec.el.classList.add("hidden"); setInfo(rec, false); });
+    zones.forEach(z => z.classList.add("hidden"));
+    showNoResults(true, raw.trim());
+    setCount("0 matches");
+    return;
+  }
+  showNoResults(false, "");
+
+  const visible = new Set(), expand = new Set();
+  matched.forEach(rec => {
+    visible.add(rec);
+    let p = rec.parent;
+    while (p) { visible.add(p); expand.add(p); p = p.parent; }
+  });
+
+  records.forEach(rec => {
+    rec.el.classList.toggle("hidden", !visible.has(rec));
+    setExpanded(rec, expand.has(rec));
+    plain(rec);
+    setInfo(rec, false);
+    if (rec.match) {
+      if (rec.matchHead) {
+        if (rec.type === "variant") {
+          if (rec.labelText.toLowerCase().includes(q)) highlight(rec.labelEl, rec.labelText, q);
+          if (rec.discText.toLowerCase().includes(q))  highlight(rec.discEl, rec.discText, q);
+        } else {
+          if (rec.keyText.toLowerCase().includes(q))   highlight(rec.keyEl, rec.keyText, q);
+          if (rec.typeText.toLowerCase().includes(q))  highlight(rec.typeEl, rec.typeText, q);
+        }
+      }
+      if (rec.matchDesc) {
+        highlight(rec.descEl, rec.descText, q);
+        if (!rec.matchHead) setInfo(rec, true);   // reveal description when that's why it matched
+      }
+    }
+  });
+
+  zones.forEach(z => z.classList.toggle("hidden", !z.querySelector(".node:not(.hidden), .variant:not(.hidden)")));
+  setCount(matched.length + (matched.length === 1 ? " match" : " matches"));
+}
+
+/* ---- chrome wiring ---- */
+const searchInput = document.getElementById("search");
+const countEl = document.getElementById("count");
+const noresults = document.getElementById("noresults");
+const nrq = document.getElementById("nrq");
+const descBtn = document.getElementById("descBtn");
+let allDesc = false;
+function setCount(t) { countEl.textContent = t; }
+function showNoResults(on, q) { noresults.classList.toggle("on", on); if (on) nrq.textContent = '"' + q + '"'; }
+
+function expandAll() {
+  searchInput.value = ""; setCount(""); showNoResults(false, ""); closeAllInfo();
+  records.forEach(rec => { rec.el.classList.remove("hidden"); plain(rec); setExpanded(rec, rec.hasBody); });
+  zones.forEach(z => z.classList.remove("hidden"));
+}
+function collapseAll() {
+  searchInput.value = ""; setCount(""); showNoResults(false, ""); closeAllInfo();
+  records.forEach(rec => { rec.el.classList.remove("hidden"); plain(rec); setExpanded(rec, false); });
+  zones.forEach(z => z.classList.remove("hidden"));
+}
+
+descBtn.addEventListener("click", () => {
+  allDesc = !allDesc;
+  descBtn.classList.toggle("active", allDesc);
+  descBtn.setAttribute("aria-pressed", allDesc ? "true" : "false");
+  records.forEach(rec => { if (rec.descEl) setInfo(rec, allDesc); });
+});
+
+document.getElementById("expandAll").addEventListener("click", expandAll);
+document.getElementById("collapseAll").addEventListener("click", collapseAll);
+searchInput.addEventListener("input", e => applySearch(e.target.value));
+searchInput.addEventListener("keydown", e => { if (e.key === "Escape") { searchInput.value = ""; applySearch(""); searchInput.blur(); } });
+
+// "/" focuses the filter (unless already typing in it)
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); }
+});
+
+// theme toggle
+const themeBtn = document.getElementById("theme");
+function syncThemeBtn() {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+  themeBtn.title = dark ? "Switch to light" : "Switch to dark";
+}
+themeBtn.addEventListener("click", () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  const next = dark ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("crt-theme", next); } catch (e) {}
+  syncThemeBtn();
+});
+
+/* ---- init ---- */
+document.getElementById("tree").appendChild(buildNode(REQUEST_TREE, REQUEST_TREE.key, null).el);
+resetToDefault();
+syncThemeBtn();
+</script>
+</body>
+</html>

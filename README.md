@@ -42,6 +42,8 @@ It works out of the box against `gemma.lan`. To point somewhere else, copy `.env
 
 That `while` loop is the harness.
 
+> Why Chat Completions and not OpenAI's newer Responses API? See [docs/chat-completions-vs-responses.md](docs/chat-completions-vs-responses.md) — short version: Chat Completions is the universal standard, it's what our llama.cpp server speaks natively, and it isn't deprecated.
+
 ## Roadmap
 
 Each step is a small lesson layered onto the loop. Tackle them in order.

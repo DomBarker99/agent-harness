@@ -1,0 +1,17 @@
+{
+  // Isolated type-check for the EXERCISE files only (not the solutions subfolder).
+  // Inherits strict + module settings from the repo root so behaviour matches the
+  // real project, but scopes `include` to just this folder's top-level *.ts files.
+  //
+  //   Run:  npm run ts-practice
+  //
+  // While you have unfinished TODOs this will report errors — that's the point.
+  // Drive it to green one file at a time (errors are grouped by file path).
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["*.ts"],
+  // clear the root's "exclude": ["src/practice"] so this project sees its own files
+  "exclude": []
+}
