@@ -1,12 +1,12 @@
 # agent-harness
 
-A minimal **agent harness** in TypeScript: an LLM running in a loop with tools, pointed at a **local, OpenAI-compatible model**. No API credits, no build step, ~60 lines.
+A minimal **agent harness** in TypeScript: an LLM running in a loop with tools, wrapped in an [Ink](https://github.com/vadimdemedes/ink) terminal UI, pointed at a **local, OpenAI-compatible model**. No API credits, no build step.
 
 > An agent harness is the code around a model that turns a text predictor into something that takes actions. Call the model, run the tool calls it asks for, feed the results back, repeat until it's done. That loop is the whole idea. Everything else (Claude Code included) is elaboration on top of it.
 
 ## Prerequisites
 
-- **Node 25+** runs TypeScript directly by stripping the types, so there is no build step.
+- **Node 22+**. The UI is JSX, which Node's built-in type stripping can't handle, so `tsx` runs it (installed as a dev dependency — still no build step).
 - A **local OpenAI-compatible endpoint**. The defaults target `http://gemma.lan/v1` (llama.cpp serving `gemma-4-12b`). Any llama.cpp / vLLM / Ollama server works.
 
 ## Setup and run
@@ -16,13 +16,9 @@ npm install
 npm start
 ```
 
-`npm start` runs the default task ("list files, tell me the largest"). Pass your own:
+`npm start` launches the TUI. Type a prompt, watch the model call tools (green) and answer (blue).
 
-```bash
-npm start -- "read package.json and summarize the scripts"
-```
-
-Type-check it (handy while learning TS, since Node runs the code but never checks types):
+Type-check it (handy while learning TS, since `tsx` runs the code but never checks types):
 
 ```bash
 npm run typecheck
@@ -34,13 +30,16 @@ It works out of the box against `gemma.lan`. To point somewhere else, copy `.env
 
 ## How it works
 
-`src/agent.ts` has three parts:
+| File | Role |
+| --- | --- |
+| `src/harness.ts` | **The loop.** `runTurn()` sends the conversation, executes any `tool_calls` in the reply, appends each result as a `role: "tool"` message, and re-prompts until the model answers with plain text. |
+| `src/tools.ts` | **The tool registry.** Each entry pairs the JSON schema the model sees with the `run()` function that actually executes the call. The model only *asks*; your code decides what happens. |
+| `src/prompts.ts` | System prompts. |
+| `src/main.tsx` | The Ink TUI. Renders the message history and feeds user input into `runTurn()`. |
 
-1. **`tools`** is the JSON schema of what the model is *allowed* to call. It can only request these.
-2. **`execute()`** is *your* code that actually runs a tool call. The model never runs anything itself. It only asks, and you decide what happens.
-3. **`agent()`** is the loop. Send the messages plus the tools. If the reply has `tool_calls`, run them and append each result as a `role: "tool"` message, then loop. If it has no tool calls, it is done, so return the text.
+That `while` loop in `runTurn` is the harness.
 
-That `while` loop is the harness.
+> Why Chat Completions and not OpenAI's newer Responses API? Short version: Chat Completions is the universal standard, it's what our llama.cpp server speaks natively, and it isn't deprecated.
 
 ## Roadmap
 
@@ -48,10 +47,10 @@ Each step is a small lesson layered onto the loop. Tackle them in order.
 
 - [ ] **1. Permission gate.** Confirm (or allowlist) before `run_bash` executes. The single most important real-world layer. Right now it runs whatever the model emits.
 - [ ] **2. Streaming.** Set `stream: true` so you watch tokens arrive instead of waiting per turn.
-- [ ] **3. Tool registry plus more tools.** Add `read_file`, `write_file`, `list_dir`. Replace the `if/else` in `execute()` with a `Map`.
+- [ ] **3. More tools.** Add `read_file`, `write_file`, `list_dir` entries to the `toolset` registry.
 - [ ] **4. Robust tool I/O.** Wrap the `JSON.parse` of the arguments and feed parse/exec errors back as tool results so the model can self-correct.
 - [ ] **5. Context management.** When `messages` grows large, summarize older turns. (gemma gives you 262K tokens of context, so this comes later, but prefill cost is the real ceiling.)
-- [ ] **6. Sub-agents.** A tool whose implementation calls `agent()` again with a fresh message list. This is exactly how Claude Code spawns a subagent.
+- [ ] **6. Sub-agents.** A tool whose implementation calls the loop again with a fresh message list. This is exactly how Claude Code spawns a subagent.
 
 Finish step 6 and you have rebuilt a small Claude Code.
 
