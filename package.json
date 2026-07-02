@@ -5,14 +5,19 @@
   "description": "A minimal agent harness: an LLM in a loop with tools, against a local OpenAI-compatible model.",
   "type": "module",
   "scripts": {
-    "start": "node --env-file-if-exists=.env src/agent.ts",
+    "start": "node --env-file-if-exists=.env --import tsx src/main.tsx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "openai": "^6.42.0"
+    "@inkjs/ui": "^2.0.0",
+    "ink": "^7.1.0",
+    "openai": "^6.42.0",
+    "react": "^19.2.7"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
 }
