@@ -5,16 +5,20 @@
   "description": "A minimal agent harness: an LLM in a loop with tools, against a local OpenAI-compatible model.",
   "type": "module",
   "scripts": {
-    "start": "node --env-file-if-exists=.env --import tsx src/main.tsx",
+    "start": "node --env-file-if-exists=.env --import tsx src/main.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@deepgram/sdk": "^5.7.0",
     "@inkjs/ui": "^2.0.0",
+    "file-type": "^22.0.1",
     "ink": "^7.1.0",
     "openai": "^6.42.0",
-    "react": "^19.2.7"
+    "react": "^19.2.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@openrouter/sdk": "^0.13.32",
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
     "tsx": "^4.22.4",
