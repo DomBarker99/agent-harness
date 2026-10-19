@@ -13,6 +13,7 @@ import {
     ImageGenerationRequestResolution,
 } from "@openrouter/sdk/models";
 import {z} from "zod";
+import {getOpenRouterOptions} from "../../config.ts";
 import type {Tool, ToolFunction} from "../toolRegistry.ts";
 import {OpenRouter} from "@openrouter/sdk";
 import {readFile, mkdir, writeFile} from "node:fs/promises";
@@ -21,12 +22,8 @@ import {salvageFractionalInts, formatError} from "../../errorHandler.ts";
 import {ResponseValidationError} from "@openrouter/sdk/models/errors";
 import {ImageGenerationResponse$inboundSchema} from "@openrouter/sdk/models";
 import type {$ZodIssue} from "zod/v4/core";
-import {
-    extensionFromMediaType,
-    generateAssets,
-    type GenerateAssetsParams,
-    mediaTypeFromExtension
-} from "./generateAssets.ts";
+import {generateAssets, type GenerateAssetsParams} from "./generateAssets.ts";
+import {extensionFromMediaType, mediaTypeFromExtension} from "./mediaAnalysis.ts";
 
 /*
     generateImage tool: validates LLM-produced args for OpenRouter image generation.
@@ -81,7 +78,7 @@ const generateImageFunction : ToolFunction = async (args : GenerateImageArgsType
         session: session,
         args: args,
         referenceArrays: [args.inputReferences ?? []],
-        initialModelURL : "https://openrouter.ai/api/v1/images/models",
+        initialModelURL : `${getOpenRouterOptions().serverURL}/images/models`,
         run: async (client) => {
 
             const {storageLocation, ...imageGenerationRequest} = args

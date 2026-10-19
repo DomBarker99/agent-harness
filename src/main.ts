@@ -16,6 +16,7 @@ import {type InteractiveTUIConfig, type NonInteractiveTUIConfig, TUI} from "./TU
 import {writeFile} from "node:fs/promises";
 import {collectSystemInfo} from "./tools/systemInfo.ts";
 import {safeParse} from "zod";
+import {getOpenRouterOptions, loadRuntimeConfig, parseStartupArgs, USAGE} from "./config.ts";
 
 /*
     NOTE: As of right now, the only way to perform multi turn interactions is through the TUI. When weighing options,
@@ -319,14 +320,8 @@ Do not ask me any questions — make sensible choices for anything ambiguous and
 in the README. Work strictly inside /tmp/neon-arcade using absolute paths; your shell does
 not persist a working directory between commands.`
 
-// NOTE : The proxy disables streaming
-const mitmProxyURL = "http://localhost:8080/api/v1"
-const openRouterAPIUrl = "https://openrouter.ai/api/v1"
-const apiKey = process.env.OPENROUTER_API_KEY
-if (!apiKey) {
-    console.error("Set OPENROUTER_API_KEY in .env")
-    process.exit(1)
-}
+// The experimental helpers below share the same endpoint as the normal CLI.
+const {serverURL, apiKey} = getOpenRouterOptions()
 
 function chattyQuestionResponse () {
     const systemPrompt =
@@ -340,7 +335,7 @@ function chattyQuestionResponse () {
         prompts.personas.oversharingFriend
 
     const client : OpenRouter = new OpenRouter({
-        serverURL : mitmProxyURL,
+        serverURL : serverURL,
         apiKey : apiKey
     });
 
@@ -404,7 +399,8 @@ function chattyQuestionResponse () {
     })
 }
 
-function startTui (interactive : boolean) {
+function startTui (config: ReturnType<typeof loadRuntimeConfig>, prompt?: string) {
+    const interactive = prompt === undefined
 
     // Interactive is the implicit default, so it has no mode fragment; askWhenUnclear is
     //  its counterpart and must never stack with mode.nonInteractive — see docs/decisions/010
@@ -428,8 +424,8 @@ function startTui (interactive : boolean) {
         collectSystemInfo()
 
     const client : OpenRouter = new OpenRouter({
-        serverURL : mitmProxyURL,
-        apiKey : apiKey
+        serverURL : config.serverURL,
+        apiKey : config.apiKey
     });
 
     const chatRequest : ChatRequest = {
@@ -437,14 +433,7 @@ function startTui (interactive : boolean) {
             role : "system",
             content : interactive ? interactiveSystemPrompt : nonInteractiveSystemPrompt
         }],
-        model : "openai/gpt-5.6-luna-pro",
-        cacheControl : {
-            type: "ephemeral",
-            ttl : "1h"
-        },
-        provider : {
-            only : ["OpenAI"]
-        },
+        model : config.model,
         tools : toolSchemas
     }
 
@@ -460,7 +449,7 @@ function startTui (interactive : boolean) {
         session : mainSession,
         initialChat : {
             role : "user",
-            content : imageToolTestAmbiguous
+            content : prompt ?? ""
         }
     }
 
@@ -469,7 +458,7 @@ function startTui (interactive : boolean) {
 
 async function testImageGen() {
     const client : OpenRouter = new OpenRouter({
-        serverURL : openRouterAPIUrl,
+        serverURL : serverURL,
         apiKey : apiKey
     });
 
@@ -500,4 +489,21 @@ async function testImageGen() {
     }
 }
 
-startTui(false)
+try {
+    const options = parseStartupArgs(process.argv.slice(2))
+    if (options.help) {
+        console.log(USAGE)
+    } else {
+        const config = loadRuntimeConfig()
+        if (options.check) {
+            console.log(`Configuration valid for ${config.model}. No API request sent.`)
+        } else if (options.prompt === undefined && !process.stdin.isTTY) {
+            throw new Error('Interactive chat requires a terminal. Use --prompt "your task" for noninteractive input.')
+        } else {
+            startTui(config, options.prompt)
+        }
+    }
+} catch (error) {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exitCode = 1
+}

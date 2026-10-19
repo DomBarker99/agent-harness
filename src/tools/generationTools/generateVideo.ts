@@ -1,4 +1,4 @@
-import {OpenRouter} from "@openrouter/sdk";
+import {getOpenRouterOptions} from "../../config.ts";
 import type {GetVideosRequest} from "@openrouter/sdk/models/operations";
 import {z} from "zod";
 import type {ChatContentItems, VideoGenerationRequest} from "@openrouter/sdk/models";
@@ -11,7 +11,7 @@ import {
     VideoGenerationRequestAspectRatio,
     VideoGenerationRequestResolution,
 } from "@openrouter/sdk/models";
-import type {GenerateAssetsParams} from "./generateAssets.ts";
+import {generateAssets, type GenerateAssetsParams} from "./generateAssets.ts";
 import {open, unlink, rename, readFile} from "node:fs/promises";
 import {getMediaExtension, mediaTypeFromExtension} from "./mediaAnalysis.ts";
 
@@ -22,15 +22,6 @@ import {getMediaExtension, mediaTypeFromExtension} from "./mediaAnalysis.ts";
       notes: docs/notes/zod.md
       ADRs:  002 (zod at trust boundaries), 013 (video returned as base64)
  */
-
-const mitmProxyURL = "http://localhost:8080/api/v1"
-const openRouterAPIUrl = "https://openrouter.ai/api/v1"
-const apiKey = process.env.OPENROUTER_API_KEY ?? ""
-
-const client : OpenRouter = new OpenRouter({
-    serverURL : mitmProxyURL,
-    apiKey : apiKey
-});
 
 /*
     TODO:
@@ -55,7 +46,7 @@ const generateVideoFunction : ToolFunction = async (args : GenerateVideoArgsType
         session : session,
         args : args,
         referenceArrays : [args.frameImages ?? [], args.inputReferences ?? []],
-        initialModelURL : "https://openrouter.ai/api/v1/videos/models",
+        initialModelURL : `${getOpenRouterOptions().serverURL}/videos/models`,
         run : async (client) => {
             const {storageLocation, ...imageGenerationRequest} = args
             const videoArray : ChatContentItems[] = []
@@ -122,7 +113,7 @@ const generateVideoFunction : ToolFunction = async (args : GenerateVideoArgsType
                     if (session.modelAcceptsVideoInput()){
                         // Base64 rather than the job.unsignedUrls entry, and the memory cost that
                         //  buys — see docs/decisions/013
-                        const bytes = await readFile(tempPath)
+                        const bytes = await readFile(finalPath)
                         videoArray.push({
                             type : "video_url",
                             videoUrl : {
@@ -136,13 +127,15 @@ const generateVideoFunction : ToolFunction = async (args : GenerateVideoArgsType
                     //  sampling works.
                     if (session.modelAcceptsImageInput()){
                         // FIXME : Strip image frames
-                        const bytes = await readFile(tempPath)
+                        const bytes = await readFile(finalPath)
                     }
                 }
             }
+            return videoArray
         }
     }
 
+    return generateAssets(generateAssetParams)
 }
 
 // ════ CONSTANTS AND OBJECTS ════
@@ -173,7 +166,7 @@ export const generateVideoArgs = z.object({
         type : z.literal(FrameImageType.ImageUrl),
         imageUrl : z.object({ url : z.string() }),
         frameType : z.enum(FrameType)
-    })).optional(),k
+    })).optional(),
     // InputReference is a union over the three content-part kinds; the discriminator is the
     // shared `type` tag, so a wrong url field for the claimed kind fails here
     inputReferences : z.array(z.discriminatedUnion("type", [

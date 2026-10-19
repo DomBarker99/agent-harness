@@ -2,11 +2,12 @@
   "name": "agent-harness",
   "version": "0.1.0",
   "private": true,
-  "description": "A minimal agent harness: an LLM in a loop with tools, against a local OpenAI-compatible model.",
+  "description": "Experimental TypeScript agent harness with an Ink terminal interface and configurable OpenRouter integration.",
   "type": "module",
   "scripts": {
     "start": "node --env-file-if-exists=.env --import tsx src/main.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@deepgram/sdk": "^5.7.0",
@@ -23,5 +24,8 @@
     "@types/react": "^19.2.17",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

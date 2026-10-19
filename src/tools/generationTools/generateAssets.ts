@@ -3,6 +3,7 @@ import {GENERATE_VIDEO_TOOL_NAME, generateVideoArgs, type GenerateVideoArgsType}
 import {GENERATE_IMAGE_TOOL_NAME, generateImageArgs, type GenerateImageArgsType} from "./generateImage.ts";
 import type {SessionInfo} from "../../eventPipeline.ts";
 import {OpenRouter} from "@openrouter/sdk";
+import {getOpenRouterOptions} from "../../config.ts";
 import {mkdir, readFile} from "node:fs/promises";
 import {z} from "zod";
 import {formatError} from "../../errorHandler.ts";
@@ -18,10 +19,7 @@ export async function generateAssets(params : GenerateAssetsParams) : Promise<Ch
 
     if (toolCallCount) {
         // set up the client
-        const client : OpenRouter = new OpenRouter({
-            serverURL : "http://localhost:8080/api/v1/",
-            apiKey : process.env.OPENROUTER_API_KEY ?? ""
-        });
+        const client : OpenRouter = new OpenRouter(getOpenRouterOptions());
 
         // Validate the storage location
         if (params.args.storageLocation) {

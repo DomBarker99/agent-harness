@@ -88,7 +88,7 @@ export class ChatSession {
                                                                     client : OpenRouter,
                                                                     chatRequest : ChatRequest) => {
 
-        const eventPipeline = new EventPipeline(chatRequest.messages, eventEmitter)
+        const eventPipeline = new EventPipeline(chatRequest.messages, eventEmitter, undefined)
 
          const runChatTurnParams : RunChatTurnParams = {
              chatRequest: chatRequest,
@@ -103,7 +103,7 @@ export class ChatSession {
      getModelFromChatRequest = async (request : ChatRequest) : Promise<Model | undefined> => {
 
          const modelName : string = request.model ?? "";
-         const client : OpenRouter = new OpenRouter()
+         const client : OpenRouter = this.client
          let response : ModelResponse | undefined = undefined
 
          try {

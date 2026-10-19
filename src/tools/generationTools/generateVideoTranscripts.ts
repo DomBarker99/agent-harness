@@ -1,3 +1,5 @@
+// Unregistered transcription prototype. Keep this inactive until the tool is implemented.
+/*
 // FIXME: Implement audio transcription tool
 import { createReadStream } from "fs";
 import { DeepgramClient } from "@deepgram/sdk";
@@ -12,3 +14,5 @@ const response = await client.listen.v1.media.transcribeFile(
     { model: "nova-3" }
 );
 console.log(response.results.channels[0].alternatives[0].transcript);
+*/
+export {};
