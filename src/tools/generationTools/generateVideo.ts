@@ -18,9 +18,8 @@ import {getMediaExtension, mediaTypeFromExtension} from "./mediaAnalysis.ts";
 /*
     generateVideo tool: validates LLM-produced args for OpenRouter video generation.
 
-    References:
-      notes: docs/notes/zod.md
-      ADRs:  002 (zod at trust boundaries), 013 (video returned as base64)
+    The model's arguments are validated with Zod before any request is sent. Generated
+    video is handed back to the model as base64 rather than a URL.
  */
 
 /*
@@ -111,8 +110,8 @@ const generateVideoFunction : ToolFunction = async (args : GenerateVideoArgsType
                     })
 
                     if (session.modelAcceptsVideoInput()){
-                        // Base64 rather than the job.unsignedUrls entry, and the memory cost that
-                        //  buys — see docs/decisions/013
+                        // Base64 rather than the job.unsignedUrls entry, at the cost of holding
+                        //  the whole video in memory
                         const bytes = await readFile(finalPath)
                         videoArray.push({
                             type : "video_url",

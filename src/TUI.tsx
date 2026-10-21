@@ -9,9 +9,6 @@ import type {ChatUserMessage} from "@openrouter/sdk/models";
 /*
     The Ink TUI entry point: renders the message list, streaming previews, and the input
     box, and wires the UI's reaction to harness events (updateMessageList).
-
-    References:
-      notes: docs/notes/react.md (re-render trigger, props)
  */
 
 export type TUIConfig = InteractiveTUIConfig | NonInteractiveTUIConfig
@@ -64,7 +61,6 @@ export function TUI ({config}: {config : TUIConfig}) {
         } else if (event.kind === "completed tool event") {
             // Writes only — reading `toolRequest` here would see a stale snapshot,
             //  since the emitter holds the closure from the mount render
-            //  (see docs/notes/react.md, docs/decisions/009)
             setToolRequest(undefined)
             setMessages((m) => [...m, event]);
         }

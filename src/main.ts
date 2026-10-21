@@ -25,7 +25,7 @@ function startTui (config: ReturnType<typeof loadRuntimeConfig>, prompt?: string
     const interactive = prompt === undefined
 
     // Interactive is the implicit default, so it has no mode fragment; askWhenUnclear is
-    //  its counterpart and must never stack with mode.nonInteractive — see docs/decisions/010
+    //  its counterpart and must never stack with mode.nonInteractive
     const interactiveSystemPrompt =
         prompts.environment.harness +
         prompts.format.plainText +

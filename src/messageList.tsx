@@ -9,9 +9,6 @@ import type {ChatToolCallFunction} from "@openrouter/sdk/models/chattoolcall";
 /*
     Renders the finished-message list and the per-source message components (user,
     assistant, reasoning, tool). Ink components; props via object destructuring.
-
-    References:
-      notes: docs/notes/react.md (component props, the `key` special prop)
  */
 
 // ════ FUNCTIONS ═════════════════════════════════════════════════════════════════════

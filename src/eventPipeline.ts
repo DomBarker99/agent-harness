@@ -164,8 +164,8 @@ export type ToolCompletionEvent =  {
     kind : "completed tool event"
     message : ChatToolMessage
     // The originating call (name + args), carried on the event so listeners
-    //  never need to correlate this with the earlier ToolRequestEvent — see
-    //  docs/decisions/009. Only `message` goes to chat history; this field
+    //  never need to correlate this with the earlier ToolRequestEvent. Only
+    //  `message` goes to chat history; this field
     //  stays harness-side.
     initialCall : ChatToolCallFunction
 }

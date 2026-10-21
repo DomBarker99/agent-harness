@@ -14,15 +14,15 @@ import {type Probe, probeSchema} from "./ffprobe-schema.ts";
       probe → decode flags → measure (2 decode passes) → boundaries (cuts + soft)
       → shots → frame timestamps → extract through correctness prefix → manifest
 
-    References:
-      notes: docs/notes/node.md, docs/notes/zod.md
-      ADRs:  015 (flags from principal stream, positive claims only),
-             016 (rotation via ffmpeg autorotate, not a filter fragment),
-             018 (tonemap via keg-only ffmpeg@7 — supersedes 017),
-             019 (two-pass boundary detection, per-file MAD thresholds),
-             020 (measurement at 360p without the correctness prefix),
-             021 (evidence-first boundaries; "soft" semantics; editorialState),
-             022 (frame-count-per-shot is a placeholder pending experiment 3)
+    Design decisions (reasons are given where each one is applied):
+      - decode flags describe the principal video stream and stay false without a
+        positive claim from the probe
+      - rotation is left to ffmpeg's autorotate, not a filter fragment
+      - tonemapping runs through the keg-only ffmpeg@7 binary, which has zscale
+      - boundaries come from two measurement passes with per-file MAD thresholds
+      - measurement runs at 360p without the correctness prefix
+      - boundaries are evidence-first; "soft" is an honest catch-all label
+      - frames-per-shot is a placeholder until it is measured
  */
 
 // ════ TYPES AND SCHEMAS ════
@@ -67,7 +67,7 @@ type FrameMeasurement = {timestampSeconds : number, value : number};
 
 // Evidence-first: every boundary keeps the signal value that produced it, and
 // "soft" is an honest label (dissolve OR fade OR weak cut OR fast camera move —
-// the known FP class) — see docs/decisions/021
+// the known FP class)
 const boundaryEventSchema = z.object({
     kind : z.enum(["cut", "soft"]),
     timestampSeconds : z.number(),
@@ -97,8 +97,7 @@ const videoManifestSchema = z.object({
     selectFrames : z.array(selectFrameSchema),
     // single-shot vs multi-shot is the only load-bearing classification; on
     // footage KNOWN to be unedited a "multi-shot" verdict means motion
-    // structure, not edits — that reading happens at interpretation time,
-    // see docs/decisions/021
+    // structure, not edits — that reading happens at interpretation time
     editorialState : z.enum(["single-shot", "multi-shot"]),
     description : z.string().optional(),
 })
@@ -184,7 +183,7 @@ async function probeVideo(videoFilePath : string) : Promise<Probe> {
 }
 
 // Flags describe the principal video stream, not the file; every flag defaults
-// false unless the probe makes an explicit positive claim — see docs/decisions/015
+// false unless the probe makes an explicit positive claim
 function decodeFlagsFromProbe(probe : Probe) : DecodeFlags {
     const streams = probe.streams ?? []
 
@@ -243,13 +242,13 @@ function decodeFlagsFromProbe(probe : Probe) : DecodeFlags {
     inside the prefix is fixed — reasons at each step.
 
     needsRotation deliberately produces no fragment: ffmpeg applies display-matrix
-    rotation itself before the filter chain runs — see docs/decisions/016.
+    rotation itself before the filter chain runs.
 
     The tonemap fragment uses zscale, which only exists in the keg-only ffmpeg@7
     binary (FFMPEG_BIN below) — commands built from this prefix must run through
-    that binary, not the PATH ffmpeg — see docs/decisions/018.
+    that binary, not the PATH ffmpeg.
 
-    The measurement passes deliberately DON'T use this prefix — see docs/decisions/020.
+    The measurement passes deliberately DON'T use this prefix.
 */
 function ffmpegPrefixFromFlags(decode : DecodeFlags) : string[] {
     const fragments : string[] = []
@@ -278,7 +277,7 @@ function ffmpegPrefixFromFlags(decode : DecodeFlags) : string[] {
 // YDIF (from signalstats): average per-pixel brightness change vs the previous
 // frame, 0–255. Near-zero inside a shot; jumps an order of magnitude at a hard
 // cut — madThreshold finds those jumps downstream.
-// Measured at 360p without the correctness prefix — see docs/decisions/020
+// Measured at 360p without the correctness prefix
 async function measureYdifPerFrame(videoFilePath : string) : Promise<FrameMeasurement[]> {
     return measureFrames(videoFilePath,
         "scale=-2:360,signalstats",
@@ -289,8 +288,8 @@ async function measureYdifPerFrame(videoFilePath : string) : Promise<FrameMeasur
 // [{timestampSeconds, value}] — "how different is the picture from the one
 // HALF A SECOND ago", 0–1. fps=2 sits BEFORE the scorer, and that widened
 // stride is the whole point: a 1s dissolve is invisible frame-to-frame but
-// spans ~2 half-second comparisons, each carrying ~half the change — see
-// docs/decisions/019. select=gte(scene,0) keeps every frame — it exists only
+// spans ~2 half-second comparisons, each carrying ~half the change.
+// select=gte(scene,0) keeps every frame — it exists only
 // because ffmpeg computes the scene score lazily, when an expression mentions
 // it. The first second is dropped: the head-of-stream comparison spikes
 // spuriously on nearly every file.
@@ -347,7 +346,7 @@ async function measureFrames(videoFilePath : string, measuringFilterChain : stri
 // value from typical" — e.g. values 2,3,1,2,98,3,1,2,3 → typical 2, deviation 1,
 // multiplier 12 → line at 14: the 98 towers over it, everything else stays under.
 // Built from THIS file's numbers, so grainy film and clean CG both get correct
-// lines untouched — see docs/decisions/019. Returns null when there is no
+// lines untouched. Returns null when there is no
 // deviation at all (a still image): callers turn that into zero events —
 // a valid verdict, not an error.
 function madThreshold(values : number[], madMultiplier : number) : number | null {
@@ -410,7 +409,6 @@ function detectSpikes(signal : FrameMeasurement[], madMultiplier : number, merge
 // OR fade OR weak cut OR fast camera move (the known false-positive class).
 // Thresholds adapt to this file's own noise; an empty result is a valid
 // verdict ("no structure found"), and no event is ever counted twice.
-// See docs/decisions/019 and 021.
 function detectBoundaries(perFrameYdif : FrameMeasurement[], halfSecondSceneScores : FrameMeasurement[]) : BoundaryEvent[] {
     // 1. Spike events on the per-frame pass (strict bar — CUT_MAD_MULTIPLIER)
     const hardCutEvents = detectSpikes(perFrameYdif, CUT_MAD_MULTIPLIER, CUT_MERGE_WINDOW_SECONDS)
@@ -452,8 +450,7 @@ function shotsFromBoundaries(boundaries : BoundaryEvent[], duration : number) : 
 
 // POLICY PLACEHOLDER — how many frames a shot deserves is a claim about the
 // DOWNSTREAM MODEL's behavior (linear? logarithmic? saturating?) which nothing
-// has measured; experiment 3 exists to fit the real curve — see
-// docs/decisions/022 and docs/ffmpeg-brainstorm/handoff-experiment-3.md.
+// has measured yet; fitting the real curve needs a dedicated experiment.
 // Until then: linear density, one frame per ~16s, floor of one per shot.
 // Steps are ±1 frame only. Swap the curve by editing ONLY frameCountForShot.
 function frameCountForShot(shotLengthSeconds : number) : number {
@@ -462,7 +459,7 @@ function frameCountForShot(shotLengthSeconds : number) : number {
 
 // Frame PLACEMENT is separate from count and evidence-backed: slice centers
 // (midpoints are 98.7% defect-free, within-shot choice ties 75% of the time;
-// centers sit farthest from boundary contamination) — see docs/decisions/022
+// centers sit farthest from boundary contamination)
 function selectFrameTimes(shot : Shot) : number[] {
     const length = shot.endSeconds - shot.startSeconds
     const frameCount = frameCountForShot(length)
@@ -493,7 +490,7 @@ async function extractFrames(workspace : VideoWorkspaceEntry, flags : DecodeFlag
             const frameName = `shot${String(shotIndex).padStart(2, "0")}_t${frameTimeSeconds.toFixed(1)}.jpg`
             const framePath = join(workspace.workspaceFolderPath, "frames", frameName)
             // Runs through FFMPEG_BIN — the prefix may contain zscale, which
-            // PATH ffmpeg lacks (see docs/decisions/018). Single-frame outputs
+            // PATH ffmpeg lacks. Single-frame outputs
             // make the tonemap chain affordable even on 4K sources.
             await execFileAsync(FFMPEG_BIN, [
                 "-v", "error", "-y",
@@ -529,7 +526,7 @@ const execFileAsync = promisify(execFile)
 
 // The PATH ffmpeg (Homebrew core 8.x) is built without libzimg, so it has no
 // zscale filter and cannot tonemap. Extraction commands run through the keg-only
-// ffmpeg@7 binary instead — see docs/decisions/018
+// ffmpeg@7 binary instead
 const FFMPEG_BIN = "/opt/homebrew/opt/ffmpeg@7/bin/ffmpeg"
 
 // HDR transfer functions: PQ (smpte2084) and HLG (arib-std-b67).
@@ -540,8 +537,7 @@ const HDR_TRANSFERS = new Set(["smpte2084", "arib-std-b67"])
 // The multipliers are coupled to their signals: 12 was fit on per-frame YDIF
 // (hard-cut F1 0.979 across 10 ground-truthed videos), 5 on half-second scene
 // scores (9/10 synthetic dissolves clear it; 8 kept only 3). Swapping a signal
-// without re-fitting its multiplier silently leaves the validated regime —
-// see docs/decisions/019
+// without re-fitting its multiplier silently leaves the validated regime.
 const CUT_MAD_MULTIPLIER = 12
 const SOFT_MAD_MULTIPLIER = 5
 

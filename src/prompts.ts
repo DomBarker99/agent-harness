@@ -3,11 +3,7 @@
       - FRAGMENTS (format / environment / mode / behavior / safety / task): small rules you
         STACK together, e.g. personas.pirateCaptain + format.plainText.
       - PERSONAS: complete characters you PICK ONE of; never combine two.
-    Fragments are environment-agnostic except the `environment` bucket — see ADR 006.
-
-    References:
-      notes: docs/notes/typescript.md (§ `as const`)
-      ADRs:  006 (fragment buckets & the environment exception), 010 (the mode bucket)
+    Fragments are environment-agnostic except the `environment` bucket.
  */
 
 // ════ CONSTANTS AND OBJECTS ═════════════════════════════════════════════════════════
@@ -50,7 +46,6 @@ you have not actually received.`,
   // How the SESSION works: who is (or isn't) on the other end. Pick ONE core (interactive
   // is the implicit default, so it has no fragment), then optionally stack the add-ons
   // below it. nonInteractive conflicts with behavior.askWhenUnclear — never stack both.
-  // See docs/decisions/010.
   mode: {
     // The core fragment — the minimum a one-shot session needs.
     nonInteractive: `SESSION MODE: this is a non-interactive session. You receive exactly one

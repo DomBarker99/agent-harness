@@ -16,10 +16,6 @@ import type {EventStream} from "@openrouter/sdk/lib/event-streams";
     The turn loop: send the user's message, keep executing tool calls and re-prompting
     until the model answers with plain text. Contains both the streaming and
     non-streaming model-response runners.
-
-    References:
-      notes: docs/notes/typescript.md, docs/notes/zod.md
-      ADRs:  001 (dispatch typing), 002 (zod at trust boundaries)
  */
 
 // ════ TYPES ═════════════════════════════════════════════════════════════════════════
@@ -128,7 +124,7 @@ async function runToolLoop (assistantResponse : ChatAssistantMessage,
             if (isKnownTool) {
                 try {
                     // Validate the model's arguments against this tool's schema; a failure is
-                    //  returned to the model as the tool result, not thrown. See docs/decisions/002.
+                    //  returned to the model as the tool result, not thrown.
                     const toolParams =
                         toolset[toolName].args.safeParse(JSON.parse(toolCall.function.arguments))
 

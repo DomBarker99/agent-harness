@@ -14,24 +14,19 @@ import {generateVideoTool} from "./generationTools/generateVideo.ts";
     args (Zod validator for what the model sends back), and run (the implementation).
     Assembled into the `toolset` object at the bottom, alongside the helpers the dispatch
     loop uses.
-
-    References:
-      notes: docs/notes/typescript.md, docs/notes/node.md, docs/notes/zod.md
-      ADRs:  001 (dispatch typing), 002 (zod at trust boundaries),
-             003 (no-param leniency), 004 (web search, pending), 005 (no generics yet)
  */
 
 // ════ TYPES ═════════════════════════════════════════════════════════════════════════
 
 // args is `any` by design — the dispatch loop can't know at compile time which tool it
-//  holds, and runtime safety comes from Zod instead. See docs/decisions/001 (and 005 for
-//  the deferred generic version). Each run function annotates its own parameter with
-//  z.infer<typeof itsArgsSchema> to stay in sync with its schema.
+//  holds, and runtime safety comes from Zod instead (a generic version is deferred). Each
+//  run function annotates its own parameter with z.infer<typeof itsArgsSchema> to stay
+//  in sync with its schema.
 export type ToolFunction = (args : any, session : SessionInfo) => ChatContentItems[] | Promise<ChatContentItems[]>;
 
 export type Tool = {
     schema : ChatFunctionToolFunction;
-    // Runtime validator for the model's arguments — see docs/decisions/002
+    // Runtime validator for the model's arguments
     args : z.ZodType;
     run : ToolFunction;
 };
@@ -44,8 +39,7 @@ export type AvailableTools = keyof typeof toolset;
 
 // ──── helper functions ────
 
-// Type predicate so an arbitrary runtime string can safely index toolset —
-//  see docs/notes/typescript.md § Type predicates
+// Type predicate so an arbitrary runtime string can safely index toolset
 export function isAvailableTool(toolName : string) : toolName is AvailableTools{
     return toolName in toolset
 }

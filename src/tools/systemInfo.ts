@@ -25,9 +25,9 @@ const harnessSystemInfoFunction : ToolFunction = () => {
     }]
 }
 
-// Thin wrapper so harness.ts can inject the same snapshot into the system prompt at chat
+// Thin wrapper so main.ts can inject the same snapshot into the system prompt at chat
 //  creation. The cast narrows ToolFunction's widened return type for this synchronous
-//  tool — a consequence recorded in docs/decisions/001.
+//  tool.
 export function collectSystemInfo() : string {
     return [
         `platform: ${os.type()} ${os.release()} (${os.arch()})`,
@@ -39,8 +39,7 @@ export function collectSystemInfo() : string {
     ].join("\n");
 }
 
-// Loose z.object on purpose: hallucinated stray args are stripped, not rejected —
-//  see docs/decisions/003
+// Loose z.object on purpose: hallucinated stray args are stripped, not rejected
 const harnessSystemInfoArgs = z.object({})
 
 export const systemInfoTool : Tool = {

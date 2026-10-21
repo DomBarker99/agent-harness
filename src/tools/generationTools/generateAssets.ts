@@ -46,7 +46,7 @@ export async function generateAssets(params : GenerateAssetsParams) : Promise<Ch
             }]
         }
 
-        // No toolName check needed: run already carries its own args — see docs/decisions/012
+        // No toolName check needed: run already carries its own args
         assetArray = await params.run(client)
 
     } else {
@@ -112,7 +112,7 @@ it from there rather than guessing. Generation was not run; resend with correcte
 }
 
 // One params type for both tools rather than a discriminated union — run takes no args and
-//  closes over its own at the call site, see docs/decisions/012
+//  closes over its own at the call site
 // args is only read for the fields both schemas share (storageLocation, prompt, model,
 //  resolution, seed, size); anything tool-specific belongs inside run
 // referenceArrays is in/out — swapAssetReferences mutates the caller's arrays in place, so

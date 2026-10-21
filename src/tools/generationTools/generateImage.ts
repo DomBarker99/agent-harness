@@ -28,9 +28,8 @@ import {extensionFromMediaType, mediaTypeFromExtension} from "./mediaAnalysis.ts
 /*
     generateImage tool: validates LLM-produced args for OpenRouter image generation.
 
-    References:
-      notes: docs/notes/zod.md
-      ADRs:  002 (zod at trust boundaries), 011 (salvage fractional-usage responses)
+    The model's arguments are validated with Zod before any request is sent. Responses
+    whose usage counts arrive as fractions are salvaged rather than rejected.
  */
 
 // ════ CONSTANTS AND OBJECTS ════

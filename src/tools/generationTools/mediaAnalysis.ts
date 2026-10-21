@@ -4,10 +4,6 @@ import {readdir, stat} from "node:fs/promises";
 /*
     Maps between a file's media type, its extension, and its real container.
     The first two directions are pure string mapping; the third reads the file.
-
-    References:
-      notes: docs/notes/node.md
-      ADRs:  014 (container detection by magic bytes)
  */
 
 // b64Json is the entire encoded file, so the extension is derived from the media type alone
@@ -31,7 +27,7 @@ export function mediaTypeFromExtension (filePath : string) : string {
 
 /*
     Reads the file's leading magic bytes and reports the container it actually is,
-    ignoring whatever the path claims — see docs/decisions/014.
+    ignoring whatever the path claims.
 
     Two limits come with that. It sees the container and not the streams inside, so an
     audio-only .mp4 reports "mp4"; ask ffprobe (ffprobe-schema.ts) if you need to know
