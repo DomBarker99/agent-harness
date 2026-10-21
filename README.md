@@ -52,7 +52,7 @@ This uses the existing noninteractive terminal renderer and submits only the pro
 npm start -- --help
 ```
 
-Help works without credentials. The experimental helper functions retained in `src/main.ts` are inactive unless deliberately wired up in source.
+Help works without credentials.
 
 ## Tools and limits
 
@@ -72,7 +72,7 @@ Tests cover startup/configuration errors, offline help and configuration checks,
 ## Layout
 
 ```text
-src/main.ts          CLI startup and retained experimental helpers
+src/main.ts          CLI startup and session-mode selection
 src/config.ts        argument parsing and shared OpenRouter configuration
 src/TUI.tsx          terminal UI
 src/chatSession.ts   session and conversation history
