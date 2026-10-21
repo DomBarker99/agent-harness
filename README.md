@@ -58,7 +58,7 @@ Help works without credentials. The experimental helper functions retained in `s
 
 The registry includes shell execution, system information, web search (when `BRAVE_SEARCH_API_KEY` is set) and experimental image/video tools. Shell commands run as your user from the harness's working directory. The harness is **not a sandbox** and does not ask for confirmation before each tool call. Use an appropriate scratch directory when trying tasks that can write files.
 
-This is a learning prototype, not a production agent service. Session history is in memory. Media behavior and availability depend on the selected model/API. The unfinished transcription prototype is inactive and is not registered as a tool.
+This is a learning prototype, not a production agent service. Session history is in memory. Media behavior and availability depend on the selected model/API.
 
 ## Verification
 

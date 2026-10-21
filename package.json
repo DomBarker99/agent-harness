@@ -10,7 +10,6 @@
     "test": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
-    "@deepgram/sdk": "^5.7.0",
     "@inkjs/ui": "^2.0.0",
     "file-type": "^22.0.1",
     "ink": "^7.1.0",
