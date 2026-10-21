@@ -1,5 +1,14 @@
 import {parseArgs} from "node:util";
 
+/*
+    Startup configuration: command-line flags and the environment variables that select the
+    model endpoint. Kept separate from main.ts so it can be tested without starting the TUI,
+    and shared with the media and web-search tools so every request uses the same settings.
+
+    Nothing here makes a network request or prints a credential; errors name the variable
+    to fix, never its value.
+ */
+
 export const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 
 export const USAGE = `Usage: npm start -- [options]

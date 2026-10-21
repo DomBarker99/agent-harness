@@ -5,6 +5,15 @@ import {once} from "node:events";
 import {test} from "node:test";
 import {DEFAULT_BASE_URL, getOpenRouterOptions, loadRuntimeConfig, parseStartupArgs} from "../src/config.ts";
 
+/*
+    Startup and configuration tests. The first tests call config.ts directly; the rest run
+    the real CLI (src/main.ts) as a child process, so flag parsing, error output and exit
+    codes are checked as a user sees them.
+
+    Credentials are fake and every endpoint is unreachable or a local mock server, so the
+    suite runs offline and can never make a paid model call.
+ */
+
 const testEnv = {
     ...process.env,
     OPENROUTER_API_KEY: "test-key-not-a-real-credential",

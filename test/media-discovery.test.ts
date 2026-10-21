@@ -5,6 +5,13 @@ import {test} from "node:test";
 import type {SessionInfo} from "../src/eventPipeline.ts";
 import {toolset} from "../src/tools/toolRegistry.ts";
 
+/*
+    Media-tool endpoint test. Before generating anything, generate_image and generate_video
+    ask the API which models exist; with toolCallCount at 0 they stop after that lookup.
+    A local server stands in for OpenRouter to confirm the lookup honours
+    OPENROUTER_BASE_URL and that no generation request is sent.
+ */
+
 test("both media tools return discovery results from the configured endpoint without generating assets", {timeout: 10000}, async () => {
     const requests: string[] = [];
     const server = createServer((req, res) => {
