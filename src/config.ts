@@ -16,6 +16,7 @@ Environment:
   OPENROUTER_MODEL     A model ID with tool-calling support (required).
   OPENROUTER_BASE_URL  Optional API base URL, including /api/v1.
                       Defaults to https://openrouter.ai/api/v1.
+  BRAVE_SEARCH_API_KEY Optional. Enables the web_search tool.
 `;
 
 export function parseStartupArgs(args: string[]) {
@@ -44,6 +45,12 @@ export function getOpenRouterOptions(env: NodeJS.ProcessEnv = process.env) {
         apiKey: env.OPENROUTER_API_KEY?.trim() ?? "",
         serverURL: (env.OPENROUTER_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/+$/, "")
     };
+}
+
+// Web search is optional: without a key the tool stays registered but reports that it is
+//  not configured instead of sending a request.
+export function getBraveSearchApiKey(env: NodeJS.ProcessEnv = process.env): string | undefined {
+    return env.BRAVE_SEARCH_API_KEY?.trim() || undefined;
 }
 
 export function loadRuntimeConfig(env: NodeJS.ProcessEnv = process.env) {

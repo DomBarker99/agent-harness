@@ -20,6 +20,7 @@ Edit `.env` before running:
 | `OPENROUTER_API_KEY` | Required. Your OpenRouter API key. |
 | `OPENROUTER_MODEL` | Required. A text model ID with tool-calling support that your account can access. Choose one from the [OpenRouter model catalog](https://openrouter.ai/models). |
 | `OPENROUTER_BASE_URL` | Optional. Defaults to `https://openrouter.ai/api/v1`. An explicit override applies to chat, model lookup, media-model discovery and media generation. Include the complete API base path when using a development proxy. |
+| `BRAVE_SEARCH_API_KEY` | Optional. A [Brave Search API](https://brave.com/search/api/) key for the `web_search` tool. Without it, the tool tells the model it is not configured and sends no request. |
 
 Model capabilities and prices vary. The `.env` file is ignored by Git, and values already set in your environment take precedence over that file.
 
@@ -55,7 +56,7 @@ Help works without credentials. The experimental helper functions retained in `s
 
 ## Tools and limits
 
-The registry includes shell execution, system information, web search and experimental image/video tools. Shell commands run as your user from the harness's working directory. The harness is **not a sandbox** and does not ask for confirmation before each tool call. Use an appropriate scratch directory when trying tasks that can write files.
+The registry includes shell execution, system information, web search (when `BRAVE_SEARCH_API_KEY` is set) and experimental image/video tools. Shell commands run as your user from the harness's working directory. The harness is **not a sandbox** and does not ask for confirmation before each tool call. Use an appropriate scratch directory when trying tasks that can write files.
 
 This is a learning prototype, not a production agent service. Session history is in memory. Media behavior and availability depend on the selected model/API. The unfinished transcription prototype is inactive and is not registered as a tool.
 
@@ -66,7 +67,7 @@ npm run typecheck
 npm test
 ```
 
-Tests cover startup/configuration errors, offline help and configuration checks, a one-shot turn and media-model discovery against local mock HTTP servers. The mocks verify the configured endpoint/model and exact supplied prompt without real credentials, paid model calls or generated media. Passing these checks does not establish live-provider or end-to-end media compatibility.
+Tests cover startup/configuration errors, offline help and configuration checks, a one-shot turn, media-model discovery against local mock HTTP servers and web-search credential handling against a stubbed `fetch`. The mocks verify the configured endpoint/model and exact supplied prompt without real credentials, paid model calls or generated media. Passing these checks does not establish live-provider or end-to-end media compatibility.
 
 ## Layout
 

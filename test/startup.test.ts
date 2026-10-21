@@ -10,6 +10,7 @@ const testEnv = {
     OPENROUTER_API_KEY: "test-key-not-a-real-credential",
     OPENROUTER_MODEL: "test/model",
     OPENROUTER_BASE_URL: "http://127.0.0.1:9/api/v1",
+    BRAVE_SEARCH_API_KEY: "",
     FORCE_COLOR: "0"
 };
 
@@ -59,6 +60,7 @@ test("configuration check needs no reachable endpoint and never prints the key",
     const result = runCli(["--check"]);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /Configuration valid for test\/model/);
+    assert.match(result.stdout, /Web search disabled \(BRAVE_SEARCH_API_KEY not set\)/);
     assert.ok(!result.stdout.includes(testEnv.OPENROUTER_API_KEY));
     assert.ok(!result.stderr.includes(testEnv.OPENROUTER_API_KEY));
 });

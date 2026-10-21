@@ -16,7 +16,7 @@ import {type InteractiveTUIConfig, type NonInteractiveTUIConfig, TUI} from "./TU
 import {writeFile} from "node:fs/promises";
 import {collectSystemInfo} from "./tools/systemInfo.ts";
 import {safeParse} from "zod";
-import {getOpenRouterOptions, loadRuntimeConfig, parseStartupArgs, USAGE} from "./config.ts";
+import {getBraveSearchApiKey, getOpenRouterOptions, loadRuntimeConfig, parseStartupArgs, USAGE} from "./config.ts";
 
 /*
     NOTE: As of right now, the only way to perform multi turn interactions is through the TUI. When weighing options,
@@ -496,7 +496,8 @@ try {
     } else {
         const config = loadRuntimeConfig()
         if (options.check) {
-            console.log(`Configuration valid for ${config.model}. No API request sent.`)
+            const webSearch = getBraveSearchApiKey() ? "enabled" : "disabled (BRAVE_SEARCH_API_KEY not set)"
+            console.log(`Configuration valid for ${config.model}. Web search ${webSearch}. No API request sent.`)
         } else if (options.prompt === undefined && !process.stdin.isTTY) {
             throw new Error('Interactive chat requires a terminal. Use --prompt "your task" for noninteractive input.')
         } else {

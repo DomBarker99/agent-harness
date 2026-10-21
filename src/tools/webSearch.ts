@@ -1,7 +1,18 @@
 import type {Tool, ToolFunction} from "./toolRegistry.ts";
 import {z} from "zod";
+import {getBraveSearchApiKey} from "../config.ts";
 
 const webSearchFunction : ToolFunction = async (args : z.infer<typeof webSearchArgs>) => {
+
+    // Read per call so the rest of the harness runs without a search key; the model is told
+    //  the tool is unavailable instead of receiving a failed request
+    const apiKey = getBraveSearchApiKey()
+    if (!apiKey) {
+        return [{
+            type : "text",
+            text : "web_search is not configured: set BRAVE_SEARCH_API_KEY to enable it."
+        }]
+    }
 
     const URL : string = "https://api.search.brave.com/res/v1/llm/context"
 
@@ -10,7 +21,7 @@ const webSearchFunction : ToolFunction = async (args : z.infer<typeof webSearchA
         headers : {
             "accept": "application/json",
             "Accept-Encoding": "gzip",
-            "X-Subscription-Token" : process.env.BRAVE_SEARCH_API_KEY ?? "",
+            "X-Subscription-Token" : apiKey,
             "Content-Type": "application/json"
         },
         body : JSON.stringify(args)
@@ -23,6 +34,15 @@ const webSearchFunction : ToolFunction = async (args : z.infer<typeof webSearchA
         const response = await fetch(URL, requestInit)
         // Await for all the text to come true
         const responseBody =  await response.text()
+
+        // An invalid or revoked key comes back as a non-2xx response; label it so the model
+        //  does not mistake an error body for search results
+        if (!response.ok) {
+            return [{
+                type : "text",
+                text : `web_search failed with HTTP ${response.status}: ${responseBody}`
+            }]
+        }
 
         return [{
             type : "text",
